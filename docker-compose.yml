@@ -14,7 +14,49 @@ services:
     ports:
       - "5432:5432"
 
-# TODO добавить сервисы
+  cars: 
+    image: cars:latest
+    container_name: cars
+    pull_policy: never 
+    build: 
+      context: services/cars 
+      dockerfile: ../Dockerfile
+    restart: on-failure
+    ports: 
+      - "8070:8070"
+
+  rental: 
+    image: rental:latest
+    container_name: rental
+    pull_policy: never 
+    build: 
+      context: services/rental 
+      dockerfile: ../Dockerfile
+    restart: on-failure
+    ports: 
+      - "8060:8060"
+
+  payment: 
+    image: payment:latest
+    container_name: payment
+    pull_policy: never 
+    build: 
+      context: services/payment 
+      dockerfile: ../Dockerfile
+    restart: on-failure
+    ports: 
+      - "8050:8050"
+
+  gateway: 
+    image: gateway:latest
+    container_name: gateway
+    pull_policy: never 
+    build: 
+      context: services/gateway 
+      dockerfile: ../Dockerfile
+    restart: on-failure
+    ports: 
+      - "8080:8080"
 
 volumes:
   db-data:
