@@ -2,7 +2,7 @@ name: GitHub Classroom Workflow
 on:
   push:
     branches:
-      - master
+      - dev-ms-arch
   pull_request:
     branches:
       - master
