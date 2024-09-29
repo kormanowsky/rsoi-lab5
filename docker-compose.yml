@@ -19,8 +19,8 @@ services:
     container_name: cars
     pull_policy: never 
     build: 
-      context: services/cars 
-      dockerfile: ../Dockerfile
+      args:
+        SERVICE: cars 
     restart: on-failure
     ports: 
       - "8070:8070"
@@ -30,8 +30,8 @@ services:
     container_name: rental
     pull_policy: never 
     build: 
-      context: services/rental 
-      dockerfile: ../Dockerfile
+      args:
+        SERVICE: rental 
     restart: on-failure
     ports: 
       - "8060:8060"
@@ -41,8 +41,8 @@ services:
     container_name: payment
     pull_policy: never 
     build: 
-      context: services/payment 
-      dockerfile: ../Dockerfile
+      args:
+        SERVICE: payment 
     restart: on-failure
     ports: 
       - "8050:8050"
@@ -52,8 +52,8 @@ services:
     container_name: gateway
     pull_policy: never 
     build: 
-      context: services/gateway 
-      dockerfile: ../Dockerfile
+      args:
+        SERVICE: gateway 
     restart: on-failure
     ports: 
       - "8080:8080"

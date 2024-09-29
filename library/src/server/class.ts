@@ -7,6 +7,8 @@ export abstract class Server {
 
         this.port = port;
 
+        this.server.get('/manage/health', (_, res) => {res.sendStatus(200)});
+
         this.initRoutes();
     }
 
