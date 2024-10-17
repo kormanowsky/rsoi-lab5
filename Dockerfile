@@ -2,8 +2,14 @@ FROM node:alpine
 
 ARG SERVICE
 
-COPY library/ /library
-RUN mkdir -p /apps/${SERVICE}
+RUN mkdir -p /library && mkdir -p /apps/${SERVICE}
+
+WORKDIR /library
+
+COPY library/src ./src
+COPY library/package*.json .
+
+RUN npm install
 
 WORKDIR /apps/${SERVICE}
 
