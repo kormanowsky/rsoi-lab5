@@ -21,6 +21,8 @@ jobs:
 
       - name: Build images
         timeout-minutes: 10
+        env: 
+          CARS_STORAGE_CONN_STRING: ${{secrets.CARS_STORAGE_CONN_STRING}}
         run: docker compose build
 
       - name: Run containers
