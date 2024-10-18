@@ -1,6 +1,7 @@
 FROM node:alpine 
 
 ARG SERVICE
+ARG STORAGE_CONN_STRING
 
 RUN mkdir -p /library && mkdir -p /apps/${SERVICE}
 
@@ -17,5 +18,7 @@ COPY services/${SERVICE}/src/ ./src
 COPY services/${SERVICE}/package*.json .
 
 RUN npm install
+
+ENV CONN_STRING ${STORAGE_CONN_STRING}
 
 CMD ["npx", "tsx", "./src/run.ts"]

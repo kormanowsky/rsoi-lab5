@@ -20,7 +20,8 @@ services:
     pull_policy: never 
     build: 
       args:
-        SERVICE: cars 
+        SERVICE: cars
+        STORAGE_CONN_STRING: ${CARS_STORAGE_CONN_STRING}
     restart: on-failure
     ports: 
       - "8070:8070"

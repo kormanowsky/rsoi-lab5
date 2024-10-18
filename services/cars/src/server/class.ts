@@ -1,5 +1,4 @@
-import {Server} from '@rsoi-lab2/library';
+import { EntityServer } from '@rsoi-lab2/library';
+import { Car, CarFilter, CarId } from '../logic';
 
-export class CarsServer extends Server {
-    protected initRoutes(): void {}
-}
+export class CarsServer extends EntityServer<Car, CarFilter, CarId> {}

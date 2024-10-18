@@ -6,7 +6,6 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
 
     abstract getInsertQueryForEntity(entity: TEnt): [string, unknown[]];
     abstract getUpdateQueryForEntity(entity: Partial<TEnt>): [string, unknown[]];
-    abstract getCreateQueryForEntity(entity: TEnt): [string, unknown[]];
     abstract getSelectQueryForFilter(filter: TEntFilter): [string, unknown[]];
     abstract getEntityFromRow(row: Record<string, unknown>): TEnt;
 
