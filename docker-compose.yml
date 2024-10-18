@@ -22,7 +22,7 @@ services:
       args:
         SERVICE: cars
     environment: 
-      STORAGE_CONN_STRING: ${CARS_STORAGE_CONN_STRING}
+      CONN_STRING: ${CARS_STORAGE_CONN_STRING}
     restart: on-failure
     ports: 
       - "8070:8070"

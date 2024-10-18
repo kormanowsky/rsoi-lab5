@@ -8,11 +8,11 @@ export abstract class Server {
         this.port = port;
 
         this.server.get('/manage/health', (_, res) => {res.sendStatus(200)});
-
-        this.initRoutes();
     }
 
     start(): void {
+        this.initRoutes();
+
         this.server.listen(this.port, '0.0.0.0');
     }
 

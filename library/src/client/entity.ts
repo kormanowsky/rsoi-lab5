@@ -17,7 +17,13 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = number
     }
 
     async getMany(filter: TEntFilter, opts?: RequestInit): Promise<TEnt[]> {
-        const response = await fetch(this.baseUrl, {
+        const queryParams = new URLSearchParams();
+
+        for(const [key, value] of Object.entries(<Record<string, any>>filter)) {
+            queryParams.set(key, value.toString());
+        }
+
+        const response = await fetch(`${this.baseUrl}?${queryParams.toString()}`, {
             ...opts,
             method: 'GET'
         });

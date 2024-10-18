@@ -6,14 +6,14 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
         super(tableName, 0);
     }
 
-    getInsertQueryForEntity(entity: Car): [string, unknown[]] {
+    getInsertQueryForEntity(entity: Car): [string, unknown[], unknown[]] {
         return [
-            `INSERT INTO $1::TEXT
+            `INSERT INTO %I
             (car_uid, brand, model, registration_number, power, price, type, availablity)
-            VALUES($2::UUID, $3::TEXT, $4::TEXT, $5::TEXT, $6::INTEGER, $7::INTEGER, $8::TEXT, $9::BOOLEAN)
+            VALUES($1::UUID, $2::TEXT, $3::TEXT, $4::TEXT, $5::INTEGER, $6::INTEGER, $7::TEXT, $8::BOOLEAN)
             RETURNING *;`,
+            [this.getTableName()],
             [
-                this.getTableName(), 
                 entity.carUid,
                 entity.brand, 
                 entity.model,
@@ -26,23 +26,25 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
         ];
     }
 
-    getUpdateQueryForEntity(entity: Partial<Car>): [string, unknown[]] {
+    getUpdateQueryForEntity(entity: Partial<Car>): [string, unknown[], unknown[]] {
         // TODO
-        return ['SELECT 1;', []];
+        return ['SELECT 1;', [], []];
     }
 
-    getSelectQueryForFilter(filter: CarFilter): [string, unknown[]] {
+    getSelectQueryForFilter(filter: CarFilter): [string, unknown[], unknown[]] {
         if (filter.showAll) {
             return [
-                `SELECT * FROM $1::TEXT ORDER BY car_uid LIMIT $2::INTEGER OFFSET $3::INTEGER;`,
-                [this.getTableName(), filter.size, filter.page]
+                `SELECT * FROM %I ORDER BY car_uid LIMIT $1::INTEGER OFFSET $2::INTEGER;`,
+                [this.getTableName()], 
+                [filter.size, filter.page]
             ];
         }
 
         return [
-            `SELECT * FROM $1::TEXT WHERE availability = TRUE ORDER BY car_uid 
-            LIMIT $2::INTEGER OFFSET $3::INTEGER;`,
-            [this.getTableName(), filter.size, filter.page]
+            `SELECT * FROM %I WHERE availability = TRUE ORDER BY car_uid 
+            LIMIT $1::INTEGER OFFSET $2::INTEGER;`,
+            [this.getTableName()], 
+            [filter.size, filter.page]
         ];
     }
 

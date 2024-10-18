@@ -4,36 +4,40 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
         this.sampleId = sampleId;
     }
 
-    abstract getInsertQueryForEntity(entity: TEnt): [string, unknown[]];
-    abstract getUpdateQueryForEntity(entity: Partial<TEnt>): [string, unknown[]];
-    abstract getSelectQueryForFilter(filter: TEntFilter): [string, unknown[]];
+    abstract getInsertQueryForEntity(entity: TEnt): [string, unknown[], unknown[]];
+    abstract getUpdateQueryForEntity(entity: Partial<TEnt>): [string, unknown[], unknown[]];
+    abstract getSelectQueryForFilter(filter: TEntFilter): [string, unknown[], unknown[]];
     abstract getEntityFromRow(row: Record<string, unknown>): TEnt;
 
-    getSelectQueryForId(id: TId): [string, unknown[]] {
+    getSelectQueryForId(id: TId): [string, unknown[], unknown[]] {
         if (typeof id === 'string') {
             return [
-                `SELECT * FROM $1::TEXT WHERE id = $2::TEXT`, 
-                [this.getTableName(), id]
+                `SELECT * FROM %I WHERE id = $1::TEXT`, 
+                [this.getTableName()],
+                [id]
             ];
         }
 
         return [
-            `SELECT * FROM $1::TEXT WHERE id = $2::INTEGER`,
-            [this.getTableName(), id]
+            `SELECT * FROM %I WHERE id = $1::INTEGER`,
+            [this.getTableName()],
+            [id]
         ];
     }
 
-    getDeleteQueryForId(id: TId): [string, unknown[]] {
+    getDeleteQueryForId(id: TId): [string, unknown[], unknown[]] {
         if (typeof id === 'string') {
             return [
-                `DELETE FROM $1::TEXT WHERE id = $2::TEXT`, 
-                [this.getTableName(), id]
+                `DELETE FROM %I WHERE id = $1::TEXT`, 
+                [this.getTableName()], 
+                [id]
             ];
         }
 
         return [
-            `DELETE FROM $1::TEXT WHERE id = $2::INTEGER`,
-            [this.getTableName(), id]
+            `DELETE FROM %I WHERE id = $1::INTEGER`,
+            [this.getTableName()], 
+            [id]
         ];
     }
 

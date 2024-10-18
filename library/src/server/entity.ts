@@ -8,23 +8,16 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
     constructor(
         storage: EntityStorage<TEnt, TEntFilter, TId>, 
         basePath: string, 
-        port: number,
-        originalServer?: Server
+        port: number
     ) {
         super(port);
         this.basePath = basePath;
         this.storage = storage;
-
-        if (originalServer) {
-            this.initRoutesForServer((<EntityServer<TEnt, TEntFilter, TId>>originalServer).getServer());
-        }
     }
 
     protected initRoutes(): void {
-        this.initRoutesForServer(this.getServer());
-    }
+        const server = this.getServer();
 
-    protected initRoutesForServer(server: Express): void {
         server
             .route(`/${this.basePath}`)
             .get(this.getMany.bind(this))

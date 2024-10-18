@@ -1,4 +1,5 @@
 import pg from 'pg';
+import pgFormat from 'pg-format';
 import { EntityStorage } from "../storage";
 import { PostgresEntityMapper } from "./entity-mapper";
 
@@ -18,8 +19,9 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         await this.ready;
 
         const 
-            [query, params] = this.mapper.getSelectQueryForId(id),
-            resultRows = await this.client.query(query, params);
+            [query, formatParams, queryParams] = this.mapper.getSelectQueryForId(id),
+            formattedQuery: string = pgFormat(query, formatParams),
+            resultRows = await this.client.query(formattedQuery, queryParams);
         
         if (resultRows.rowCount === 0) {
             return null;
@@ -32,8 +34,9 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         await this.ready;
 
         const 
-            [query, params] = this.mapper.getSelectQueryForFilter(filter),
-            resultRows = await this.client.query(query, params);
+            [query, formatParams, queryParams] = this.mapper.getSelectQueryForFilter(filter),
+            formattedQuery = pgFormat(query, formatParams),
+            resultRows = await this.client.query(formattedQuery, queryParams);
         
         return resultRows.rows.map((row) => this.mapper.getEntityFromRow(row));
     }
@@ -42,8 +45,9 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         await this.ready;
 
         const 
-            [query, params] = this.mapper.getInsertQueryForEntity(entity),
-            resultRows = await this.client.query(query, params);
+            [query, formatParams, queryParams] = this.mapper.getInsertQueryForEntity(entity),
+            formattedQuery = pgFormat(query, formatParams),
+            resultRows = await this.client.query(formattedQuery, queryParams);
 
         return this.mapper.getEntityFromRow(resultRows.rows[0]);
     }
@@ -52,8 +56,9 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         await this.ready;
 
         const 
-            [query, params] = this.mapper.getUpdateQueryForEntity(update),
-            resultRows = await this.client.query(query, params);
+            [query, formatParams, queryParams] = this.mapper.getUpdateQueryForEntity(update),
+            formattedQuery = pgFormat(query, formatParams),
+            resultRows = await this.client.query(formattedQuery, queryParams);
 
         return this.mapper.getEntityFromRow(resultRows.rows[0]);
     }
@@ -62,8 +67,9 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         await this.ready;
 
         const 
-            [query, params] = this.mapper.getDeleteQueryForId(id),
-            resultRows = await this.client.query(query, params);
+            [query, formatParams, queryParams] = this.mapper.getDeleteQueryForId(id),
+            formattedQuery = pgFormat(query, formatParams),
+            resultRows = await this.client.query(formattedQuery, queryParams);
         
         return (resultRows.rowCount ?? 0) > 0;
     }
