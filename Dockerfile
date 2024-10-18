@@ -19,6 +19,4 @@ COPY services/${SERVICE}/package*.json .
 
 RUN npm install
 
-ENV CONN_STRING ${STORAGE_CONN_STRING}
-
 CMD ["npx", "tsx", "./src/run.ts"]
