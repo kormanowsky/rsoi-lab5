@@ -9,7 +9,7 @@ export interface Car {
     power: number;
     price: number;
     type: 'SEDAN' | 'SUV' | 'MINIVAN' | 'ROADSTER';
-    availability: boolean;
+    available: boolean;
 }
 
 export type CarId = Exclude<Car['id'], undefined>;

@@ -34,16 +34,11 @@ jobs:
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master
-        continue-on-error: true 
         with:
           collection: v3/postman/collection.json
           environment: v3/postman/environment.json
           delayRequest: 100
           reporters: '[ "cli" ]'
-
-      - name: Capture logs 
-        run: | 
-          docker compose logs
 
       - uses: education/autograding@v1
         id: autograder

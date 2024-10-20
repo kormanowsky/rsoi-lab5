@@ -21,7 +21,7 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
                 entity.power,
                 entity.price,
                 entity.type,
-                entity.availability
+                entity.available
             ]
         ];
     }
@@ -85,7 +85,7 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
             power: <Car['power']>row.power,
             price: <Car['price']>row.price,
             type: <Car['type']>row.type, 
-            availability: <Car['availability']>row.availability
+            available: <Car['available']>row.availability
         };
     }
 
