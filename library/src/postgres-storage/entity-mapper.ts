@@ -1,4 +1,4 @@
-import { EntityPaginationData, EntityPaginationFilter } from "../server";
+import { EntityPaginationData, EntityPaginationFilter } from "../logic";
 
 export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string | number = number> {
     constructor(tableName: string, sampleId: TId) {
@@ -7,7 +7,7 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
     }
 
     abstract getInsertQueryForEntity(entity: TEnt): [string, unknown[], unknown[]];
-    abstract getUpdateQueryForEntity(entity: Partial<TEnt>): [string, unknown[], unknown[]];
+    abstract getUpdateQueryForEntity(entity: {id: TId, update: Partial<TEnt>}): [string, unknown[], unknown[]];
     abstract getSelectQueryForFilter(filter: TEntFilter): [string, unknown[], unknown[]];
     abstract getPaginatedSelectQueryForFilter(filter: TEntFilter & EntityPaginationFilter): [string, unknown[], unknown[]];
     abstract getSelectTotalCountQueryForFilter(filter: TEntFilter): [string, unknown[], unknown[]];

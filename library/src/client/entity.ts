@@ -1,4 +1,8 @@
-export class EntityClient<TEnt, TEntFilter, TId extends string | number = number> {
+import { EntityCRUD } from "../logic";
+
+export class EntityClient<TEnt, TEntFilter, TId extends string | number = number> 
+    implements EntityCRUD<TEnt, TEntFilter, TId> 
+{
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
     }
@@ -71,7 +75,7 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = number
         throw new Error('failed to update');
     }
 
-    async delete(id: TId, opts?: RequestInit): Promise<TEnt> {
+    async delete(id: TId, opts?: RequestInit): Promise<boolean> {
         const response = await fetch(`${this.baseUrl}/${id}`, {
             ...opts,
             method: 'DELETE'

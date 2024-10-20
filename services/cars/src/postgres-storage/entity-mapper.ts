@@ -26,7 +26,7 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
         ];
     }
 
-    getUpdateQueryForEntity(entity: Partial<Car>): [string, unknown[], unknown[]] {
+    getUpdateQueryForEntity(_: any): [string, unknown[], unknown[]] {
         // TODO
         return ['SELECT 1;', [], []];
     }

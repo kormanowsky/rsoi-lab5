@@ -1,8 +1,7 @@
 import pg, { QueryResult } from 'pg';
 import pgFormat from 'pg-format';
-import { EntityStorage } from "../storage";
+import { EntityStorage, EntityPaginationData, EntityPaginationFilter } from "../logic";
 import { PostgresEntityMapper } from "./entity-mapper";
-import { EntityPaginationData, EntityPaginationFilter } from '../server';
 
 export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number = number> 
     implements EntityStorage<TEnt, TEntFilter, TId> {
@@ -59,10 +58,10 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         return this.mapper.getEntityFromRow(resultRows.rows[0]);
     }
 
-    async update(update: Partial<TEnt>): Promise<TEnt> {
+    async update(id: TId, update: Partial<TEnt>): Promise<TEnt> {
         await this.ready;
 
-        const resultRows = await this.executeQuery(...this.mapper.getUpdateQueryForEntity(update));
+        const resultRows = await this.executeQuery(...this.mapper.getUpdateQueryForEntity({id, update}));
 
         return this.mapper.getEntityFromRow(resultRows.rows[0]);
     }

@@ -1,21 +1,23 @@
 import { Request, Response } from "express";
 
-import { EntityStorage } from "../storage";
+import { EntityLogic, EntityPaginationFilter, EntityParser } from "../logic";
 
 import { Server } from "./abstract";
-import { EntityPaginationFilter } from "./filter";
 
-export class EntityServer<TEnt, TEntFilter, TId extends string | number = number> extends Server {
+export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number = number> 
+    extends Server
+    implements EntityParser<TEnt, TEntFilter, TId> {
+
     constructor(
-        storage: EntityStorage<TEnt, TEntFilter, TId>, 
+        logic: EntityLogic<TEnt, TEntFilter, TId>, 
         basePath: string, 
         port: number,
         enablePagination: boolean = false
     ) {
         super(port);
         this.basePath = basePath;
-        this.storage = storage;
-        this.paginationEnabled = enablePagination;
+        this.logic = logic;
+        this.paginationEnabled = enablePagination && logic.supportsPagination();
     }
 
     protected initRoutes(): void {
@@ -23,7 +25,7 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
 
         server
             .route(`/${this.basePath}`)
-            .get(this.getMany.bind(this))
+            .get(this.paginationEnabled ? this.getPaginatedMany.bind(this) : this.getMany.bind(this))
             .post(this.create.bind(this));
 
         server
@@ -37,7 +39,7 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
         let idParsed: TId;
 
         try {
-            idParsed = this.parseIdParam(req.params.id);
+            idParsed = this.parseId(req.params.id);
 
         } catch (err) {
             res.status(400).send({error: 'Bad ID In Request'});
@@ -45,39 +47,70 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
             return;
         }
 
-        this.storage.getOne(idParsed).then(res.send.bind(res)).catch((err) => {
+        this.logic.getOne(idParsed).then(res.send.bind(res)).catch((err) => {
             res.status(500).send({error: 'Internal Server Error'});
             console.error(err);
         });
     }
 
     protected getMany(req: Request, res: Response): void {
-        let storagePromise: Promise<unknown>;
+        let parsedFilter: TEntFilter;
 
-        if (this.paginationEnabled) {
-            storagePromise = this.storage.getPaginatedMany(<TEntFilter & EntityPaginationFilter>req.query);
-        } else {
-            storagePromise = this.storage.getMany(<TEntFilter>req.query);
+        try {
+            parsedFilter = this.parseFilter(req.query);
+        } catch (err) {
+            res.status(400).send({error: 'Bad Filter in Request'});
+            console.log(err);
+            return;
         }
 
-        storagePromise.then(res.send.bind(res)).catch((err) => {
+        this.logic.getMany(parsedFilter).then(res.send.bind(res)).catch((err) => {
+            res.status(500).send({error: 'Internal Server Error'});
+            console.error(err);
+        });
+    }
+
+    protected getPaginatedMany(req: Request, res: Response): void {
+        let parsedFilter: TEntFilter & EntityPaginationFilter;
+
+        try {
+            parsedFilter = this.parsePaginationFilter(req.query);
+        } catch (err) {
+            res.status(400).send({error: 'Bad Filter in Request'});
+            console.log(err);
+            return;
+        }
+
+        this.logic.getPaginatedMany(parsedFilter).then(res.send.bind(res)).catch((err) => {
             res.status(500).send({error: 'Internal Server Error'});
             console.error(err);
         });
     }
 
     protected create(req: Request, res: Response): void {
-        this.storage.create(<TEnt>req.body).then(res.send.bind(res)).catch((err) => {
+        let parsedEntity: TEnt;
+
+        try {
+            parsedEntity = this.parseEntity(req.body);
+        } catch (err) {
+            res.status(400).send({error: 'Bad Entity in Request'});
+            console.log(err);
+            return;
+        }
+
+        this.logic.create(parsedEntity).then(res.send.bind(res)).catch((err) => {
             res.status(500).send({error: 'Internal Server Error'});
             console.error(err);
         });
     }
 
     protected update(req: Request, res: Response): void {
-        let idParsed: TId;
+        let 
+            idParsed: TId,
+            parsedUpdate: Partial<TEnt>;
 
         try {
-            idParsed = this.parseIdParam(req.params.id);
+            idParsed = this.parseId(req.params.id);
 
         } catch (err) {
             res.status(400).send({error: 'Bad ID In Request'});
@@ -85,8 +118,17 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
             return;
         }
 
-        this.storage.update(
-            <Partial<TEnt>>{...req.body, id: idParsed}
+        try {
+            parsedUpdate = this.parsePartialEntity(req.body);
+        } catch (err) {
+            res.status(400).send({error: 'Bad Update in Request'});
+            console.log(err);
+            return;
+        }
+
+        this.logic.update(
+            idParsed,
+            parsedUpdate
         ).then(res.send.bind(res)).catch((err) => {
             res.status(500).send({error: 'Internal Server Error'});
             console.error(err);
@@ -97,7 +139,7 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
         let idParsed: TId;
 
         try {
-            idParsed = this.parseIdParam(req.params.id);
+            idParsed = this.parseId(req.params.id);
 
         } catch (err) {
             res.status(400).send({error: 'Bad ID In Request'});
@@ -105,7 +147,7 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
             return;
         }
 
-        this.storage.delete(idParsed)
+        this.logic.delete(idParsed)
             .then(() => res.status(204).send())
             .catch((err) => {
                 res.status(500).send({error: 'Internal Server Error'});
@@ -113,16 +155,19 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
             });
     }
 
-    protected parseIdParam(idParam: string): TId {
-        const 
-            idSample = this.storage.getSampleId();
+    parseId(value: unknown): TId {
+        if (typeof value !== 'string') {
+            throw new Error('Bad ID, not string');
+        }
+
+        const idType = this.logic.getIdType();
 
         let idParsed: TId;
 
-        if (typeof idSample === 'string') {
-            idParsed = <TId>idParam;
-        } else if (typeof idSample === 'number') {
-            idParsed = <TId>parseInt(idParam, 10);
+        if (idType === 'string') {
+            idParsed = <TId>value;
+        } else if (idType === 'number') {
+            idParsed = <TId>parseInt(value, 10);
 
             if (isNaN(<number>idParsed)) {
                 throw new Error('Bad ID');
@@ -134,7 +179,16 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
         return idParsed;
     }
 
-    private storage: EntityStorage<TEnt, TEntFilter, TId>;
+    supportsPagination(): boolean {
+        return this.paginationEnabled;
+    }
+
+    abstract parseEntity(value: unknown): TEnt;
+    abstract parseFilter(value: unknown): TEntFilter;
+    abstract parsePaginationFilter(value: unknown): TEntFilter & EntityPaginationFilter;
+    abstract parsePartialEntity(value: unknown): Partial<TEnt>;
+
+    private logic: EntityLogic<TEnt, TEntFilter, TId>;
     private basePath: string;
     private paginationEnabled: boolean;
 }
