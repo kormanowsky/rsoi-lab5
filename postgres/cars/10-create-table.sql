@@ -11,3 +11,4 @@ CREATE TABLE cars
         CHECK (type IN ('SEDAN', 'SUV', 'MINIVAN', 'ROADSTER')),
     availability        BOOLEAN     NOT NULL
 );
+
