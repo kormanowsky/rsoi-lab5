@@ -2,7 +2,7 @@ name: GitHub Classroom Workflow
 on:
   push:
     branches:
-      - master
+      - dev-ms-arch
   pull_request:
     branches:
       - master
@@ -29,16 +29,21 @@ jobs:
           docker compose up -d
           ./scripts/wait-script.sh
         env:
+          CARS_STORAGE_CONN_STRING: ${{secrets.CARS_STORAGE_CONN_STRING}}
           WAIT_PORTS: 8080,8070,8060,8050
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master
+        continue-on-error: true 
         with:
-          # TODO insert your variant
-          collection: <variant>/postman/collection.json
-          environment: <variant>/postman/environment.json
+          collection: v3/postman/collection.json
+          environment: v3/postman/environment.json
           delayRequest: 100
           reporters: '[ "cli" ]'
+
+      - name: Capture logs 
+        run: | 
+          docker compose logs
 
       - uses: education/autograding@v1
         id: autograder

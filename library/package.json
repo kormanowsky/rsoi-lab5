@@ -1,0 +1,22 @@
+{
+  "name": "@rsoi-lab2/library",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "4.21.0",
+    "pg": "8.13.0",
+    "pg-format": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.0",
+    "@types/node": "22.7.6",
+    "@types/pg": "8.11.10",
+    "@types/pg-format": "^1.0.5"
+  }
+}
