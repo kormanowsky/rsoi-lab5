@@ -11,7 +11,8 @@ export class GatewayServer extends Server {
 
     protected initRoutes(): void {
         this.getServer()
-            .get('/api/v1/cars', this.getCars.bind(this));
+            .get('/api/v1/cars', this.getCars.bind(this))
+            .post('/api/v1/rental', this.postRental.bind(this))
     }
 
     protected getCars(req: Request, res: Response): void {
@@ -25,6 +26,17 @@ export class GatewayServer extends Server {
             res.status(500).send({error: 'Cars service error'});
             console.error(err);
         });
+    }
+
+    protected postRental(req: Request, res: Response): void {
+        const username = req.headers['X-User-Name'];
+
+        if (username == null || username.length === 0) {
+            res.status(401).send({error: 'Authentication failure'});
+            return;
+        }
+
+        res.status(204).send();
     }
 
     private carsClient: CarsClient;
