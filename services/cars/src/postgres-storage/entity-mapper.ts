@@ -96,7 +96,7 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
     ) {
         return {
             items: entityRows.map((row) => this.getEntityFromRow(row)),
-            totalElements: totalCountRow.total_count,
+            totalElements: parseInt(<string>totalCountRow.total_count, 10),
             page: filter.page,
             pageSize: filter.size
         };
