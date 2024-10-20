@@ -1,6 +1,5 @@
 import { CarsLogic } from "./logic";
-import { PostgresCarsStorage } from "./postgres-storage/entity";
-import { PostgresCarMapper } from "./postgres-storage/entity-mapper";
+import { PostgresCarMapper, PostgresCarsStorage } from "./postgres-storage";
 import { CarsServer } from "./server";
 
 const 
