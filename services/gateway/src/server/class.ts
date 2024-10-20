@@ -21,6 +21,8 @@ export class GatewayServer extends Server {
     protected initRoutes(): void {
         this.getServer()
             .get('/api/v1/cars', this.getCars.bind(this))
+            .get('/api/v1/rental', this.getRentals.bind(this))
+            .get('/api/v1/rental/:id', this.getRental.bind(this))
             .post('/api/v1/rental', this.postRental.bind(this))
     }
 
@@ -147,6 +149,42 @@ export class GatewayServer extends Server {
             dateFrom: rental.dateFrom.toISOString().split('T')[0],
             dateTo: rental.dateTo.toISOString().split('T')[0],
             payment: payment
+        });
+    }
+
+    protected getRentals(req: Request, res: Response): void {
+        const username = <string | undefined>req.headers['x-user-name'];
+
+        if (username == null || username.length === 0) {
+            res.status(401).send({error: 'Authentication failure'});
+            return;
+        }
+
+        this.rentalsClient.getMany({username}).then(res.send.bind(res)).catch((err) => {
+            res.status(500).send({error: 'Rental service failure'});
+            console.error(err);
+        });
+    }
+
+    protected async getRental(req: Request, res: Response): Promise<void> {
+        const username = <string | undefined>req.headers['x-user-name'];
+
+        if (username == null || username.length === 0) {
+            res.status(401).send({error: 'Authentication failure'});
+            return;
+        }
+
+        // TODO: parse id?
+        this.rentalsClient.getOne(req.params.id).then((rental) => {
+            if (rental == null || rental.username !== username) {
+                res.status(404).send({error: 'No such rental'});
+                return;
+            }
+
+            res.send(rental);
+        }).catch((err) => {
+            res.status(500).send({error: 'Rental service failure'});
+            console.error(err);
         });
     }
 
