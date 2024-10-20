@@ -6,6 +6,10 @@ export class RentalsClient extends EntityClient<Rental, RentalFilter, RentalId>{
         return super.getOne(id, opts).then(this.patchRental.bind(this));
     }
 
+    getMany(filter: RentalFilter, opts?: RequestInit): Promise<Required<Rental>[]> {
+        return super.getMany(filter, opts).then((rentals) => rentals.map(this.patchRental.bind(this)));
+    }
+
     update(id: string, update: Partial<Rental>, opts?: RequestInit): Promise<Required<Rental>> {
         return super.update(id, update, opts).then(this.patchRental.bind(this));
     }

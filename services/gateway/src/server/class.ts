@@ -5,6 +5,19 @@ import { Car, CarFilter } from '../../../cars/src/logic';
 import { Rental } from '../../../rental/src/logic';
 import { Payment } from '../../../payment/src/logic';
 
+type RentalResponseBase = Omit<Partial<Rental>, 'dateFrom' | 'dateTo'> & {
+    dateFrom: string;
+    dateTo: string;
+};
+
+type RentalResponseWithCar = Omit<RentalResponseBase, 'carUid'> & {car: Required<Car>};
+type RentalResponseWithPayment = Omit<RentalResponseBase, 'payment'> & {payment: Required<Payment>};
+type RentalResponseFull = Omit<RentalResponseBase, 'car' | 'payment'> & 
+    Pick<RentalResponseWithCar, 'car'> &
+    Pick<RentalResponseWithPayment, 'payment'>;
+
+type RentalResponse = RentalResponseWithCar | RentalResponseWithPayment | RentalResponseFull;
+
 export class GatewayServer extends Server {
     constructor(
         carsClient: CarsClient, 
@@ -160,7 +173,13 @@ export class GatewayServer extends Server {
             return;
         }
 
-        this.rentalsClient.getMany({username}).then(res.send.bind(res)).catch((err) => {
+        this.rentalsClient.getMany({username}).then(async (rentals) => {
+            await Promise.all(
+                rentals.map((rental) => this.tryDereferenceRentalUids(rental))
+            ).then(
+                res.send.bind(res)
+            );
+        }).catch((err) => {
             res.status(500).send({error: 'Rental service failure'});
             console.error(err);
         });
@@ -175,13 +194,13 @@ export class GatewayServer extends Server {
         }
 
         // TODO: parse id?
-        this.rentalsClient.getOne(req.params.id).then((rental) => {
+        this.rentalsClient.getOne(req.params.id).then(async (rental) => {
             if (rental == null || rental.username !== username) {
                 res.status(404).send({error: 'No such rental'});
                 return;
             }
 
-            res.send(rental);
+            await this.tryDereferenceRentalUids(rental).then(res.send.bind(res));
         }).catch((err) => {
             res.status(500).send({error: 'Rental service failure'});
             console.error(err);
@@ -215,6 +234,40 @@ export class GatewayServer extends Server {
         }
 
         return {carUid, dateFrom, dateTo};
+    }
+
+    protected async tryDereferenceRentalUids(rental: Required<Rental>): Promise<RentalResponse> {
+        let response = <RentalResponseBase>{
+            ...rental,
+            dateFrom: rental.dateFrom.toISOString().split('T')[0],
+            dateTo: rental.dateTo.toISOString().split('T')[0]
+        };
+
+        try {
+            const payment = await this.paymentsClient.getOne(rental.paymentUid);
+
+            if (payment != null) {
+                response = <RentalResponseWithPayment>{...response, payment};
+                delete response.paymentUid;
+            }
+        } catch (err) {
+            console.warn('Payment service failed');
+            console.warn(err);
+        }
+
+        try {
+            const car = await this.carsClient.getOne(rental.carUid);
+
+            if (car != null) {
+                response = <RentalResponseWithCar>{...response, car};
+                delete response.carUid;
+            }
+        } catch (err) {
+            console.warn('Cars service failed');
+            console.warn(err);
+        }
+
+        return <RentalResponse>response;
     }
 
     private carsClient: CarsClient;
