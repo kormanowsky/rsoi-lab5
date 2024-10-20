@@ -9,7 +9,7 @@ export class PostgresPaymentMapper extends PostgresEntityMapper<Payment, Payment
     getInsertQueryForEntity(entity: Payment): [string, unknown[], unknown[]] {
         return [
             `INSERT INTO %I
-            (payment_uid, status, pricae)
+            (payment_uid, status, price)
             VALUES($1::UUID, $2::TEXT, $3::INTEGER)
             RETURNING *;`,
             [this.getTableName()],

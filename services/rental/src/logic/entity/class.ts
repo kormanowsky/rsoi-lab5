@@ -1,8 +1,8 @@
 import { EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage } from "@rsoi-lab2/library";
-import { Payment, PaymentFilter, PaymentId } from "./interface";
+import { Rental, RentalFilter, RentalId } from "./interface";
 
-export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, PaymentId> {
-    constructor(storage: EntityStorage<Payment, PaymentFilter, PaymentId>) {
+export class RentalLogic implements EntityLogic<Rental, RentalFilter, RentalId> {
+    constructor(storage: EntityStorage<Rental, RentalFilter, RentalId>) {
         this.storage = storage;
     }
 
@@ -16,13 +16,13 @@ export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, Paymen
         throw new Error(`Unexpected type of sample id: ${typeOfSampleId}`);
     }
 
-    async getOne(id: number): Promise<Payment | null> {
+    async getOne(id: number): Promise<Rental | null> {
         this.validateId(id);
 
         return this.storage.getOne(id);
     }
 
-    async getMany(filter: PaymentFilter): Promise<Payment[]> {
+    async getMany(filter: Rental): Promise<Rental[]> {
         this.validateFilter(filter);
 
         return this.storage.getMany(filter);
@@ -32,19 +32,19 @@ export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, Paymen
         return this.storage.supportsPagination();
     }
 
-    async getPaginatedMany(filter: PaymentFilter & EntityPaginationFilter): Promise<EntityPaginationData<Payment>> {
+    async getPaginatedMany(filter: RentalFilter & EntityPaginationFilter): Promise<EntityPaginationData<Rental>> {
         this.validateFilter(filter);
 
         return this.storage.getPaginatedMany(filter);
     }
 
-    async create(entity: Payment): Promise<Payment> {
+    async create(entity: Rental): Promise<Rental> {
         this.validateEntity(entity);
 
         return this.storage.create(entity);
     }
 
-    async update(id: number, update: Partial<Payment>): Promise<Payment> {
+    async update(id: number, update: Partial<Rental>): Promise<Rental> {
         this.validateId(id);
         this.validatePartialEntity(update);
 
@@ -59,24 +59,24 @@ export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, Paymen
 
     validateId(id: number): void {
         if (id <= 0) {
-            throw new Error(`Invalid payment id: ${id} <= 0`);
+            throw new Error(`Invalid rental id: ${id} <= 0`);
         }
     }
 
-    validateEntity(value: Payment): void {
+    validateEntity(value: Rental): void {
         // TODO:
         return;
     }
 
-    validateFilter(value: PaymentFilter): void {
+    validateFilter(value: RentalFilter): void {
         // TODO:
         return;
     }
 
-    validatePartialEntity(value: Partial<Payment>): void {
+    validatePartialEntity(value: Partial<Rental>): void {
         // TODO:
         return;
     }
 
-    private storage: EntityStorage<Payment, PaymentFilter, PaymentId>;
+    private storage: EntityStorage<Rental, RentalFilter, RentalId>;
 }

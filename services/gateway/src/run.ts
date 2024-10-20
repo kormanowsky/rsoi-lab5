@@ -2,9 +2,11 @@ import { CarsClient } from "./client";
 import { GatewayServer } from "./server";
 
 const 
-    port = parseInt(process.env.PORT ?? '8080', 10),
-    carsServiceUrl = process.env.CARS_SERVICE_URL ?? 'http://localhost:8070',
-    carsClient = new CarsClient(carsServiceUrl),
+    port = parseInt(process.env.PORT ?? '8000', 10),
+    carsApiUrl = process.env.CARS_API_URL!,
+    paymentApiUrl = process.env.PAYMENT_API_URL!,
+    rentalApiUrl = process.env.RENTAL_SERVICE_URL!,
+    carsClient = new CarsClient(carsApiUrl),
     server = new GatewayServer(carsClient, port);
 
 server.start();
