@@ -1,7 +1,8 @@
-import pg from 'pg';
+import pg, { QueryResult } from 'pg';
 import pgFormat from 'pg-format';
 import { EntityStorage } from "../storage";
 import { PostgresEntityMapper } from "./entity-mapper";
+import { EntityPaginationData, EntityPaginationFilter } from '../server';
 
 export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number = number> 
     implements EntityStorage<TEnt, TEntFilter, TId> {
@@ -15,13 +16,14 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         return this.mapper.getSampleId();
     }
 
+    supportsPagination(): boolean {
+        return true;
+    }
+
     async getOne(id: TId): Promise<TEnt | null> {
         await this.ready;
 
-        const 
-            [query, formatParams, queryParams] = this.mapper.getSelectQueryForId(id),
-            formattedQuery: string = pgFormat(query, formatParams),
-            resultRows = await this.client.query(formattedQuery, queryParams);
+        const resultRows = await this.executeQuery(...this.mapper.getSelectQueryForId(id));
         
         if (resultRows.rowCount === 0) {
             return null;
@@ -33,21 +35,26 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
     async getMany(filter: TEntFilter): Promise<TEnt[]> {
         await this.ready;
 
-        const 
-            [query, formatParams, queryParams] = this.mapper.getSelectQueryForFilter(filter),
-            formattedQuery = pgFormat(query, formatParams),
-            resultRows = await this.client.query(formattedQuery, queryParams);
+        const resultRows = await this.executeQuery(...this.mapper.getSelectQueryForFilter(filter));
         
         return resultRows.rows.map((row) => this.mapper.getEntityFromRow(row));
+    }
+
+    async getPaginatedMany(filter: TEntFilter & EntityPaginationFilter): Promise<EntityPaginationData<TEnt>> {
+        await this.ready;
+
+        const [resultRows, totalResultRows] = await Promise.all([
+            this.executeQuery(...this.mapper.getPaginatedSelectQueryForFilter(filter)),
+            this.executeQuery(...this.mapper.getSelectTotalCountQueryForFilter(filter))
+        ]);
+
+        return this.mapper.getPaginatedEntities(resultRows.rows, filter, totalResultRows.rows[0]);
     }
 
     async create(entity: TEnt): Promise<TEnt> {
         await this.ready;
 
-        const 
-            [query, formatParams, queryParams] = this.mapper.getInsertQueryForEntity(entity),
-            formattedQuery = pgFormat(query, formatParams),
-            resultRows = await this.client.query(formattedQuery, queryParams);
+        const resultRows = await this.executeQuery(...this.mapper.getInsertQueryForEntity(entity));
 
         return this.mapper.getEntityFromRow(resultRows.rows[0]);
     }
@@ -55,10 +62,7 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
     async update(update: Partial<TEnt>): Promise<TEnt> {
         await this.ready;
 
-        const 
-            [query, formatParams, queryParams] = this.mapper.getUpdateQueryForEntity(update),
-            formattedQuery = pgFormat(query, formatParams),
-            resultRows = await this.client.query(formattedQuery, queryParams);
+        const resultRows = await this.executeQuery(...this.mapper.getUpdateQueryForEntity(update));
 
         return this.mapper.getEntityFromRow(resultRows.rows[0]);
     }
@@ -66,12 +70,19 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
     async delete(id: TId): Promise<boolean> {
         await this.ready;
 
-        const 
-            [query, formatParams, queryParams] = this.mapper.getDeleteQueryForId(id),
-            formattedQuery = pgFormat(query, formatParams),
-            resultRows = await this.client.query(formattedQuery, queryParams);
+        const resultRows = await this.executeQuery(...this.mapper.getDeleteQueryForId(id));
         
         return (resultRows.rowCount ?? 0) > 0;
+    }
+
+    protected async executeQuery<TResultRow extends Record<string, unknown>>(
+        rawQuery: string, 
+        formatParams: unknown[], 
+        queryParams: unknown[]
+    ): Promise<QueryResult<TResultRow>> {
+        const formattedQuery = pgFormat.withArray(rawQuery, formatParams);
+        
+        return this.client.query(formattedQuery, queryParams);
     }
 
     private mapper: PostgresEntityMapper<TEnt, TEntFilter, TId>;

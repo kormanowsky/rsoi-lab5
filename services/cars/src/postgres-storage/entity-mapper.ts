@@ -1,4 +1,4 @@
-import { PostgresEntityMapper } from "@rsoi-lab2/library";
+import { PostgresEntityMapper, EntityPaginationFilter, EntityPaginationData } from "@rsoi-lab2/library";
 import { Car, CarFilter, CarId } from "../logic";
 
 export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarId> {
@@ -48,6 +48,23 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
         ];
     }
 
+    getPaginatedSelectQueryForFilter(filter: CarFilter & EntityPaginationFilter): [string, unknown[], unknown[]] {
+        return this.getSelectQueryForFilter(filter);
+    }
+
+    getSelectTotalCountQueryForFilter(filter: CarFilter): [string, unknown[], unknown[]] {
+        const 
+            [selectQuery, formatParams, queryParams] = this.getSelectQueryForFilter(filter),
+            unlimitedSelectQuery = selectQuery.replace(/ORDER BY.+;/, '');
+        
+        return [
+            `WITH filtered_items AS (${unlimitedSelectQuery})
+            SELECT COUNT(*) AS total_count FROM filtered_items;`,
+            formatParams,
+            queryParams.slice(0, -2),
+        ];
+    }
+
     getEntityFromRow(row: Record<string, unknown>): Car {
         for(const key of [
             'id', 'car_uid', 'brand', 
@@ -69,6 +86,19 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
             price: <Car['price']>row.price,
             type: <Car['type']>row.type, 
             availability: <Car['availability']>row.availability
+        };
+    }
+
+    getPaginatedEntities(
+        entityRows: Array<Record<string, unknown>>, 
+        filter: EntityPaginationFilter, 
+        totalCountRow: Record<string, unknown>
+    ) {
+        return {
+            items: entityRows.map((row) => this.getEntityFromRow(row)),
+            totalElements: totalCountRow.total_count,
+            page: filter.page,
+            pageSize: filter.size
         };
     }
 }

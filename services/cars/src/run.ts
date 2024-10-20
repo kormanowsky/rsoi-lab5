@@ -7,6 +7,6 @@ const
     connString = process.env.CONN_STRING ?? '--invalid--',
     mapper = new PostgresCarMapper('cars'),
     storage = new PostgresCarsStorage(connString, mapper),
-    server = new CarsServer(storage, 'api/v1/cars', port);
+    server = new CarsServer(storage, 'api/v1/cars', port, true);
 
 server.start();

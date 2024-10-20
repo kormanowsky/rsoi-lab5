@@ -1,18 +1,21 @@
-import { Express, Request, Response } from "express";
+import { Request, Response } from "express";
 
 import { EntityStorage } from "../storage";
 
 import { Server } from "./abstract";
+import { EntityPaginationFilter } from "./filter";
 
 export class EntityServer<TEnt, TEntFilter, TId extends string | number = number> extends Server {
     constructor(
         storage: EntityStorage<TEnt, TEntFilter, TId>, 
         basePath: string, 
-        port: number
+        port: number,
+        enablePagination: boolean = false
     ) {
         super(port);
         this.basePath = basePath;
         this.storage = storage;
+        this.paginationEnabled = enablePagination;
     }
 
     protected initRoutes(): void {
@@ -49,7 +52,15 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
     }
 
     protected getMany(req: Request, res: Response): void {
-        this.storage.getMany(<TEntFilter>req.query).then(res.send.bind(res)).catch((err) => {
+        let storagePromise: Promise<unknown>;
+
+        if (this.paginationEnabled) {
+            storagePromise = this.storage.getPaginatedMany(<TEntFilter & EntityPaginationFilter>req.query);
+        } else {
+            storagePromise = this.storage.getMany(<TEntFilter>req.query);
+        }
+
+        storagePromise.then(res.send.bind(res)).catch((err) => {
             res.status(500).send({error: 'Internal Server Error'});
             console.error(err);
         });
@@ -125,4 +136,5 @@ export class EntityServer<TEnt, TEntFilter, TId extends string | number = number
 
     private storage: EntityStorage<TEnt, TEntFilter, TId>;
     private basePath: string;
+    private paginationEnabled: boolean;
 }

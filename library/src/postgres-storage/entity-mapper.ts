@@ -1,3 +1,5 @@
+import { EntityPaginationData, EntityPaginationFilter } from "../server";
+
 export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string | number = number> {
     constructor(tableName: string, sampleId: TId) {
         this.tableName = tableName;
@@ -7,7 +9,15 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
     abstract getInsertQueryForEntity(entity: TEnt): [string, unknown[], unknown[]];
     abstract getUpdateQueryForEntity(entity: Partial<TEnt>): [string, unknown[], unknown[]];
     abstract getSelectQueryForFilter(filter: TEntFilter): [string, unknown[], unknown[]];
+    abstract getPaginatedSelectQueryForFilter(filter: TEntFilter & EntityPaginationFilter): [string, unknown[], unknown[]];
+    abstract getSelectTotalCountQueryForFilter(filter: TEntFilter): [string, unknown[], unknown[]];
     abstract getEntityFromRow(row: Record<string, unknown>): TEnt;
+
+    abstract getPaginatedEntities(
+        entityRows: Array<Record<string, unknown>>, 
+        filter: EntityPaginationFilter, 
+        totalCountRow: Record<string, unknown>
+    );
 
     getSelectQueryForId(id: TId): [string, unknown[], unknown[]] {
         if (typeof id === 'string') {
