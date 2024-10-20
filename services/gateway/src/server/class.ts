@@ -138,7 +138,11 @@ export class GatewayServer extends Server {
             }
         }
 
-        res.status(200).send(rental);
+        res.status(200).send({
+            ...rental,
+            dateFrom: rental.dateFrom.toISOString().split('T')[0],
+            dateTo: rental.dateTo.toISOString().split('T')[0]
+        });
     }
 
     protected parseRentalRequest(data: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {
