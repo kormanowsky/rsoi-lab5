@@ -2,7 +2,7 @@ name: GitHub Classroom Workflow
 on:
   push:
     branches:
-      - dev-ms-arch
+      - dev-endpoints
   pull_request:
     branches:
       - master
@@ -30,6 +30,8 @@ jobs:
           ./scripts/wait-script.sh
         env:
           CARS_STORAGE_CONN_STRING: ${{secrets.CARS_STORAGE_CONN_STRING}}
+          PAYMENT_STORAGE_CONN_STRING: ${{secrets.PAYMENT_STORAGE_CONN_STRING}}
+          RENTAL_STORAGE_CONN_STRING: ${{secrets.RENTAL_STORAGE_CONN_STRING}}
           WAIT_PORTS: 8080,8070,8060,8050
 
       - name: Run API Tests

@@ -3,14 +3,22 @@ import { Car, CarFilter, CarId } from "../logic";
 
 export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarId> {
     constructor(tableName: string) {
-        super(tableName, 0);
+        super(tableName, 'car_uid', '00000000-0000-0000-0000-000000000001');
     }
 
     getInsertQueryForEntity(entity: Car): [string, unknown[], unknown[]] {
+        let uidValue = '';
+
+        if (entity.carUid == null) {
+            uidValue = 'gen_random_uuid()'
+        } else {
+            uidValue = '$8::UUID';
+        }
+
         return [
             `INSERT INTO %I
-            (car_uid, brand, model, registration_number, power, price, type, availablity)
-            VALUES($1::UUID, $2::TEXT, $3::TEXT, $4::TEXT, $5::INTEGER, $6::INTEGER, $7::TEXT, $8::BOOLEAN)
+            (brand, model, registration_number, power, price, type, availablity, car_uid)
+            VALUES($1::TEXT, $2::TEXT, $3::TEXT, $4::INTEGER, $5::INTEGER, $6::TEXT, $7::BOOLEAN, ${uidValue})
             RETURNING *;`,
             [this.getTableName()],
             [
@@ -21,14 +29,24 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
                 entity.power,
                 entity.price,
                 entity.type,
-                entity.available
+                entity.available,
+                ...(entity.carUid == null ? [] : [entity.carUid])
             ]
         ];
     }
 
-    getUpdateQueryForEntity(_: any): [string, unknown[], unknown[]] {
-        // TODO
-        return ['SELECT 1;', [], []];
+    getEntityPropsToColumnsMap(): Record<keyof Car, [string | true, string]> {
+        return {
+            id: [true, 'INTEGER'],
+            carUid: ['car_uid', 'UUID'],
+            available: ['availability', 'BOOLEAN'],
+            brand: [true, 'TEXT'],
+            model: [true, 'TEXT'],
+            registrationNumber: ['registration_number', 'TEXT'],
+            price: [true, 'INTEGER'],
+            power: [true, 'INTEGER'],
+            type: [true, 'TEXT']
+        };
     }
 
     getSelectQueryForFilter(filter: CarFilter): [string, unknown[], unknown[]] {
@@ -55,7 +73,7 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
     getSelectTotalCountQueryForFilter(filter: CarFilter): [string, unknown[], unknown[]] {
         const 
             [selectQuery, formatParams, queryParams] = this.getSelectQueryForFilter(filter),
-            unlimitedSelectQuery = selectQuery.replace(/ORDER BY.+;/, '');
+            unlimitedSelectQuery = selectQuery.replace(/ORDER BY[^;]+;/m, '');
         
         return [
             `WITH filtered_items AS (${unlimitedSelectQuery})
@@ -65,35 +83,11 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
         ];
     }
 
-    getEntityFromRow(row: Record<string, unknown>): Car {
-        for(const key of [
-            'id', 'car_uid', 'brand', 
-            'model', 'registration_number', 
-            'power', 'price', 'type', 'availability'
-        ]) {
-            if (!row.hasOwnProperty(key)) {
-                throw new Error(`Car row misses key: ${key}`);
-            }
-        }
-
-        return {
-            id: <Car['id']>row.id,
-            carUid: <Car['carUid']>row.car_uid,
-            brand: <Car['brand']>row.brand,
-            model: <Car['model']>row.model,
-            registrationNumber: <Car['registrationNumber']>row.registration_number,
-            power: <Car['power']>row.power,
-            price: <Car['price']>row.price,
-            type: <Car['type']>row.type, 
-            available: <Car['available']>row.availability
-        };
-    }
-
     getPaginatedEntities(
         entityRows: Array<Record<string, unknown>>, 
         filter: EntityPaginationFilter, 
         totalCountRow: Record<string, unknown>
-    ) {
+    ): EntityPaginationData<Car> {
         return {
             items: entityRows.map((row) => this.getEntityFromRow(row)),
             totalElements: parseInt(<string>totalCountRow.total_count, 10),

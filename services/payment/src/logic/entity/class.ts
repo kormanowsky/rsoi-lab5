@@ -1,8 +1,8 @@
 import { EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage } from "@rsoi-lab2/library";
-import { Car, CarFilter, CarId } from "./interface";
+import { Payment, PaymentFilter, PaymentId } from "./interface";
 
-export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
-    constructor(storage: EntityStorage<Car, CarFilter, CarId>) {
+export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, PaymentId> {
+    constructor(storage: EntityStorage<Payment, PaymentFilter, PaymentId>) {
         this.storage = storage;
     }
 
@@ -16,13 +16,13 @@ export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
         throw new Error(`Unexpected type of sample id: ${typeOfSampleId}`);
     }
 
-    async getOne(id: CarId): Promise<Car | null> {
+    async getOne(id: PaymentId): Promise<Payment | null> {
         this.validateId(id);
 
         return this.storage.getOne(id);
     }
 
-    async getMany(filter: CarFilter): Promise<Car[]> {
+    async getMany(filter: PaymentFilter): Promise<Payment[]> {
         this.validateFilter(filter);
 
         return this.storage.getMany(filter);
@@ -32,51 +32,51 @@ export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
         return this.storage.supportsPagination();
     }
 
-    async getPaginatedMany(filter: CarFilter & EntityPaginationFilter): Promise<EntityPaginationData<Car>> {
+    async getPaginatedMany(filter: PaymentFilter & EntityPaginationFilter): Promise<EntityPaginationData<Payment>> {
         this.validateFilter(filter);
 
         return this.storage.getPaginatedMany(filter);
     }
 
-    async create(entity: Car): Promise<Car> {
+    async create(entity: Payment): Promise<Payment> {
         this.validateEntity(entity);
 
         return this.storage.create(entity);
     }
 
-    async update(id: CarId, update: Partial<Car>): Promise<Car> {
+    async update(id: PaymentId, update: Partial<Payment>): Promise<Payment> {
         this.validateId(id);
         this.validatePartialEntity(update);
 
         return this.storage.update(id, update);
     }
 
-    async delete(id: CarId): Promise<boolean> {
+    async delete(id: PaymentId): Promise<boolean> {
         this.validateId(id);
 
         return this.storage.delete(id);
     }
 
-    validateId(id: CarId): void {
+    validateId(id: PaymentId): void {
         if (id.length === 0) {
-            throw new Error(`Invalid car id: ${id}`);
+            throw new Error(`Invalid payment id: ${id}`);
         }
     }
 
-    validateEntity(value: Car): void {
+    validateEntity(value: Payment): void {
         // TODO:
         return;
     }
 
-    validateFilter(value: CarFilter): void {
+    validateFilter(value: PaymentFilter): void {
         // TODO:
         return;
     }
 
-    validatePartialEntity(value: Partial<Car>): void {
+    validatePartialEntity(value: Partial<Payment>): void {
         // TODO:
         return;
     }
 
-    private storage: EntityStorage<Car, CarFilter, CarId>;
+    private storage: EntityStorage<Payment, PaymentFilter, PaymentId>;
 }

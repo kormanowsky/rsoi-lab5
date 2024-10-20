@@ -3,7 +3,7 @@ import pgFormat from 'pg-format';
 import { EntityStorage, EntityPaginationData, EntityPaginationFilter } from "../logic";
 import { PostgresEntityMapper } from "./entity-mapper";
 
-export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number = number> 
+export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number = string> 
     implements EntityStorage<TEnt, TEntFilter, TId> {
     constructor(connString: string, mapper: PostgresEntityMapper<TEnt, TEntFilter, TId>) {
         this.mapper = mapper;

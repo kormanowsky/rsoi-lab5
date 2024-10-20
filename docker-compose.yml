@@ -11,6 +11,7 @@ services:
         SERVICE: cars
     environment: 
       CONN_STRING: ${CARS_STORAGE_CONN_STRING}
+      PORT: 8070
     restart: on-failure
     ports: 
       - "8070:8070"
@@ -26,8 +27,6 @@ services:
     volumes:
       - cars-postgres-data:/var/lib/postgresql/data
       - ./postgres/cars/:/docker-entrypoint-initdb.d/
-    ports: 
-      - "5432:5432"
 
   rental: 
     depends_on:
@@ -38,6 +37,9 @@ services:
     build: 
       args:
         SERVICE: rental 
+    environment: 
+      CONN_STRING: ${RENTAL_STORAGE_CONN_STRING}
+      PORT: 8060
     restart: on-failure
     ports: 
       - "8060:8060"
@@ -63,6 +65,9 @@ services:
     build: 
       args:
         SERVICE: payment 
+    environment: 
+      CONN_STRING: ${PAYMENT_STORAGE_CONN_STRING}
+      PORT: 8050
     restart: on-failure
     ports: 
       - "8050:8050"
@@ -91,7 +96,10 @@ services:
       args:
         SERVICE: gateway 
     environment:
-      CARS_SERVICE_URL: http://cars:8070/api/v1/cars/
+      CARS_API_URL: http://cars:8070/api/v1/cars/
+      PAYMENT_API_URL: http://payment:8050/api/v1/payments/
+      RENTAL_API_URL: http://rental:8060/api/v1/rentals/
+      PORT: 8080
     restart: on-failure
     ports: 
       - "8080:8080"

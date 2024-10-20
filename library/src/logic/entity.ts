@@ -12,7 +12,7 @@ export interface EntityPaginationData<TEnt> {
 
 export type EntityPaginationResponse<TEnt> = EntityPaginationData<TEnt>;
 
-export interface EntityCRUD<TEnt, TEntFilter, TId extends string | number = number> {
+export interface EntityCRUD<TEnt, TEntFilter, TId extends string | number = string> {
     getOne(id: TId): Promise<TEnt | null>; 
     getMany(filter: TEntFilter): Promise<TEnt[]>;
     create(entity: TEnt): Promise<TEnt>;
@@ -26,7 +26,7 @@ export interface EntityPaginator<TEnt, TEntFilter> {
     getPaginatedMany(filter: TEntFilter & EntityPaginationFilter): Promise<EntityPaginationData<TEnt>>;
 }
 
-export interface EntityValidator<TEnt, TEntFilter, TId extends string | number = number> {
+export interface EntityValidator<TEnt, TEntFilter, TId extends string | number = string> {
     // Валидации: бросают исключение, если что
     validateId(value: TId): void;
     validateEntity(value: TEnt): void;
@@ -34,7 +34,7 @@ export interface EntityValidator<TEnt, TEntFilter, TId extends string | number =
     validateFilter(value: TEntFilter): void;
 }
 
-export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = number>
+export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = string>
     extends EntityCRUD<TEnt, TEntFilter, TId>, 
         EntityPaginator<TEnt, TEntFilter>,
         EntityValidator<TEnt, TEntFilter, TId> {
@@ -42,13 +42,13 @@ export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = num
     getIdType(): 'string' | 'number';
 }
 
-export interface EntityStorage<TEnt, TEntFilter, TId extends string | number = number>
+export interface EntityStorage<TEnt, TEntFilter, TId extends string | number = string>
     extends EntityCRUD<TEnt, TEntFilter, TId>, EntityPaginator<TEnt, TEntFilter> {
     // Возвраащет пример ID для этого хранилища
     getSampleId(): TId;
 }
 
-export interface EntityParser<TEnt, TEntFilter, TId extends string | number = number> {
+export interface EntityParser<TEnt, TEntFilter, TId extends string | number = string> {
     parseId(value: unknown): TId;
     parseEntity(value: unknown): TEnt;
     parsePartialEntity(value: unknown): Partial<TEnt>;
