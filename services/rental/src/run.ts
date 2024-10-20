@@ -4,7 +4,7 @@ import { RentalServer } from "./server";
 
 const 
     port = parseInt(process.env.PORT ?? '8000', 10),
-    connString = process.env.CONN_STING ?? '--invalid--',
+    connString = process.env.CONN_STRING ?? '--invalid--',
     mapper = new PostgresRentalMapper('rental'),
     storage = new PostgresRentalStorage(connString, mapper),
     logic = new RentalLogic(storage),

@@ -3,8 +3,8 @@ import { PostgresPaymentMapper, PostgresPaymentsStorage } from "./postgres-stora
 import { PaymentServer } from "./server";
 
 const 
-    port = parseInt(process.env.PORT ?? '8050', 10),
-    connString = process.env.CONN_STING ?? '--invalid--',
+    port = parseInt(process.env.PORT ?? '8000', 10),
+    connString = process.env.CONN_STRING ?? '--invalid--',
     mapper = new PostgresPaymentMapper('payment'),
     storage = new PostgresPaymentsStorage(connString, mapper),
     logic = new PaymentsLogic(storage),

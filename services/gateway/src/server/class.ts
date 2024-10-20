@@ -29,7 +29,7 @@ export class GatewayServer extends Server {
     }
 
     protected postRental(req: Request, res: Response): void {
-        const username = req.headers['X-User-Name'];
+        const username = req.headers['x-user-name'];
 
         if (username == null || username.length === 0) {
             res.status(401).send({error: 'Authentication failure'});
