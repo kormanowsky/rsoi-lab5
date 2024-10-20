@@ -29,7 +29,7 @@ export class GatewayServer extends Server {
             {
                 page: parseInt(<string>req.query.page ?? '1', 10),
                 size: parseInt(<string>req.query.size ?? '15', 10),
-                showAll: Boolean(<string>req.query.showAll ?? 'false')
+                showAll: Boolean(req.query.showAll === 'false' ? '' : req.query.showAll)
             }
         ).then((data) => res.send(data)).catch((err) => {
             res.status(500).send({error: 'Cars service error'});
@@ -45,29 +45,27 @@ export class GatewayServer extends Server {
             return;
         }
 
-        let rental: Partial<Rental>;
+        let rentalRequest: Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'>;
 
         try {
-            rental = this.parseRentalRequest(req.body);
+            rentalRequest = this.parseRentalRequest(req.body);
         } catch (err) {
             res.status(400).send({error: 'Bad request'});
             console.error(err);
             return;
         }
 
-        const rentalDays = (rental.dateTo!.getTime() - rental.dateFrom!.getTime()) / (1000 * 3600 * 24);
+        const rentalDays = (rentalRequest.dateTo!.getTime() - rentalRequest.dateFrom!.getTime()) / (1000 * 3600 * 24);
 
         if (rentalDays <= 0) {
             res.status(400).send({error: 'Rental may not finish before start'});
             return;
         }
 
-        rental.username = username;
-
         let car: Car | null;
 
         try {
-            car = await this.carsClient.getOne(rental.carUid!);
+            car = await this.carsClient.getOne(rentalRequest.carUid!);
         } catch(err) {
             res.status(500).send({error: 'Cars service failure'});
             console.error(err);
@@ -86,7 +84,7 @@ export class GatewayServer extends Server {
 
         const totalPrice = car.price * rentalDays;
 
-        let payment: Payment;
+        let payment: Required<Payment>;
 
         try {
             payment = await this.paymentsClient.create({
@@ -99,10 +97,51 @@ export class GatewayServer extends Server {
             return;
         }
 
-        res.status(200).send(payment);
+        let rental: Required<Rental>;
+
+        try {
+            rental = await this.rentalsClient.create({
+                ...rentalRequest,
+                username,
+                paymentUid: payment.paymentUid,
+                status: 'IN_PROGRESS'
+            });
+        } catch (err) {
+            res.status(500).send({error: 'Rental service failure'});
+            console.error(err);
+
+            try {
+                await this.paymentsClient.update(payment.paymentUid, {status: 'CANCELED'});
+            } catch (err) {
+                console.error(err);
+            }
+
+            return;
+        }
+
+        try {
+            await this.carsClient.update(car.carUid, {available: false});
+        } catch (err) {
+            res.status(500).send({error: 'Cars service failure'});
+            console.error(err);
+
+            try {
+                await this.rentalsClient.update(rental.rentalUid, {status: 'CANCELED'});
+            } catch (err) {
+                console.error(err);
+            }
+
+            try {
+                await this.paymentsClient.update(payment.paymentUid, {status: 'CANCELED'});
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        res.status(200).send(rental);
     }
 
-    protected parseRentalRequest(data: unknown): Partial<Rental> {
+    protected parseRentalRequest(data: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {
         if (typeof data !== 'object' || data == null) {
             throw new Error(`Rental request data must be non-nullish object`);
         }

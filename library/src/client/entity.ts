@@ -1,4 +1,4 @@
-import { EntityCRUD } from "../logic";
+import { EntityCRUD, EntityPaginationResponse } from "../logic";
 
 export class EntityClient<TEnt, TEntFilter, TId extends string | number = string> 
     implements EntityCRUD<TEnt, TEntFilter, TId> 
@@ -7,7 +7,7 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = string
         this.baseUrl = baseUrl;
     }
 
-    async getOne(id: TId, opts?: RequestInit): Promise<TEnt | null> {
+    async getOne(id: TId, opts?: RequestInit): Promise<Required<TEnt> | null> {
         const response = await fetch(`${this.baseUrl}${id}`, {
             ...opts,
             method: 'GET'
@@ -20,7 +20,7 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = string
         return null;
     }
 
-    async getMany(filter: TEntFilter, opts?: RequestInit): Promise<TEnt[]> {
+    async getMany(filter: TEntFilter, opts?: RequestInit): Promise<Array<Required<TEnt>>> {
         const queryParams = new URLSearchParams();
 
         for(const [key, value] of Object.entries(<Record<string, any>>filter)) {
@@ -39,7 +39,7 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = string
         throw new Error('failed to getMany');
     }
 
-    async create(entity: TEnt, opts?: RequestInit): Promise<TEnt> {
+    async create(entity: TEnt, opts?: RequestInit): Promise<Required<TEnt>> {
         const response = await fetch(this.baseUrl, {
             ...opts,
             method: 'POST',
@@ -57,7 +57,7 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = string
         throw new Error('failed to create');
     }
 
-    async update(id: TId, update: Partial<TEnt>, opts?: RequestInit): Promise<TEnt> {
+    async update(id: TId, update: Partial<TEnt>, opts?: RequestInit): Promise<Required<TEnt>> {
         const response = await fetch(`${this.baseUrl}${id}`, {
             ...opts,
             method: 'PATCH',

@@ -6,28 +6,44 @@ export class PostgresRentalMapper extends PostgresEntityMapper<Rental, RentalFil
         super(tableName, 'rental_uid', '00000000-0000-0000-0000-000000000001');
     }
 
+    getEntityPropsToColumnsMap(): Record<keyof Rental, [string | true, string]> {
+        return {
+            id: [true, 'INTEGER'],
+            rentalUid: ['rental_uid', 'UUID'],
+            paymentUid: ['payment_uid', 'UUID'],
+            carUid: ['car_uid', 'UUID'],
+            dateFrom: ['date_from', 'DATE'],
+            dateTo: ['date_to', 'DATE'],
+            status: [true, 'TEXT'],
+            username: [true, 'TEXT']
+        };
+    }
+
     getInsertQueryForEntity(entity: Rental): [string, unknown[], unknown[]] {
+        let uidValue = '';
+
+        if (entity.rentalUid == null) {
+            uidValue = 'gen_random_uuid()'
+        } else {
+            uidValue = '$7::UUID';
+        }
+
         return [
             `INSERT INTO %I
-            (rental_uid, username, payment_uid, car_uid, date_from, date_to, status)
-            VALUES($1::UUID, $2::TEXT, $3::UUID, $4::UUID, $5::DATETIME, $6::DATETIME, $7::TEXT)
+            (username, payment_uid, car_uid, date_from, date_to, status, rental_uid)
+            VALUES($1::TEXT, $2::UUID, $3::UUID, $4::DATE, $5::DATE, $6::TEXT, ${uidValue})
             RETURNING *;`,
             [this.getTableName()],
             [
-                entity.rentalUid,
                 entity.username,
                 entity.paymentUid,
                 entity.carUid,
                 entity.dateFrom,
                 entity.dateTo,
-                entity.status
+                entity.status,
+                ...(entity.rentalUid == null ? [] : [entity.rentalUid])
             ]
         ];
-    }
-
-    getUpdateQueryForEntity(_: any): [string, unknown[], unknown[]] {
-        // TODO
-        return ['SELECT 1;', [], []];
     }
 
     getSelectQueryForFilter(filter: RentalFilter): [string, unknown[], unknown[]] {
@@ -43,27 +59,6 @@ export class PostgresRentalMapper extends PostgresEntityMapper<Rental, RentalFil
 
     getSelectTotalCountQueryForFilter(_: RentalFilter): [string, unknown[], unknown[]] {
         throw new Error(`getSelectTotalCountQueryForFilter() is not implemented in PostgresRentalMapper`);
-    }
-
-    getEntityFromRow(row: Record<string, unknown>): Rental {
-        for(const key of [
-            'id', 'rental_uid', 'username', 'payment_uid', 'car_uid', 'date_from', 'date_to', 'status'
-        ]) {
-            if (!row.hasOwnProperty(key)) {
-                throw new Error(`Rental row misses key: ${key}`);
-            }
-        }
-
-        return {
-            id: <Rental['id']>row.id,
-            rentalUid: <Rental['rentalUid']>row.rental_uid,
-            username: <Rental['username']>row.username,
-            paymentUid: <Rental['paymentUid']>row.payment_uid,
-            carUid: <Rental['carUid']>row.car_uid,
-            dateFrom: <Rental['dateFrom']>row.date_from,
-            dateTo: <Rental['dateTo']>row.date_to,
-            status: <Rental['status']>row.status
-        };
     }
 
     getPaginatedEntities(

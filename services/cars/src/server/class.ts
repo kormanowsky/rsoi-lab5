@@ -28,7 +28,7 @@ export class CarsServer extends EntityServer<Car, CarFilter, CarId> {
 
         if (valueAsRecord.hasOwnProperty('showAll')) {
             if (valueAsRecord.showAll === 'false') {
-                valueAsRecord.showAll = '0';
+                valueAsRecord.showAll = '';
             }
 
             filter.showAll = Boolean(valueAsRecord.showAll);
