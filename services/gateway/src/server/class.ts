@@ -37,6 +37,8 @@ export class GatewayServer extends Server {
             .get('/api/v1/rental', this.getRentals.bind(this))
             .get('/api/v1/rental/:id', this.getRental.bind(this))
             .post('/api/v1/rental', this.postRental.bind(this))
+            .post('/api/v1/rental/:id/finish', this.finishRental.bind(this))
+            .delete('/api/v1/rental/:id', this.cancelRental.bind(this));
     }
 
     protected getCars(req: Request, res: Response): void {
@@ -203,6 +205,57 @@ export class GatewayServer extends Server {
             await this.tryDereferenceRentalUids(rental).then(res.send.bind(res));
         }).catch((err) => {
             res.status(500).send({error: 'Rental service failure'});
+            console.error(err);
+        });
+    }
+
+    protected async finishRental(req: Request, res: Response): Promise<void> {
+        const username = <string | undefined>req.headers['x-user-name'];
+
+        if (username == null || username.length === 0) {
+            res.status(401).send({error: 'Authentication failure'});
+            return;
+        }
+
+        // TODO: parse id?
+        this.rentalsClient.getOne(req.params.id).then(async (rental) => {
+            if (rental == null || rental.username !== username) {
+                res.status(404).send({error: 'No such rental'});
+                return;
+            }
+
+            await this.carsClient.update(rental.carUid, {available: true});
+            await this.rentalsClient.update(rental.rentalUid, {status: 'FINISHED'});
+
+            res.status(204).send();
+        }).catch((err) => {
+            res.status(500).send({error: 'Internal failure'});
+            console.error(err);
+        });
+    }
+
+    protected async cancelRental(req: Request, res: Response): Promise<void> {
+        const username = <string | undefined>req.headers['x-user-name'];
+
+        if (username == null || username.length === 0) {
+            res.status(401).send({error: 'Authentication failure'});
+            return;
+        }
+
+        // TODO: parse id?
+        this.rentalsClient.getOne(req.params.id).then(async (rental) => {
+            if (rental == null || rental.username !== username) {
+                res.status(404).send({error: 'No such rental'});
+                return;
+            }
+
+            await this.carsClient.update(rental.carUid, {available: true});
+            await this.rentalsClient.update(rental.rentalUid, {status: 'CANCELED'});
+            await this.paymentsClient.update(rental.paymentUid, {status: 'CANCELED'});
+
+            res.status(204).send();
+        }).catch((err) => {
+            res.status(500).send({error: 'Internal failure'});
             console.error(err);
         });
     }
