@@ -21,8 +21,6 @@ jobs:
 
       - name: Build images
         timeout-minutes: 10
-        env: 
-          CARS_STORAGE_CONN_STRING: ${{secrets.CARS_STORAGE_CONN_STRING}}
         run: docker compose build
 
       - name: Run containers
@@ -31,6 +29,7 @@ jobs:
           docker compose up -d
           ./scripts/wait-script.sh
         env:
+          CARS_STORAGE_CONN_STRING: ${{secrets.CARS_STORAGE_CONN_STRING}}
           WAIT_PORTS: 8080,8070,8060,8050
 
       - name: Run API Tests
