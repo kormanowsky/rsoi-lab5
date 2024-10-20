@@ -138,10 +138,15 @@ export class GatewayServer extends Server {
             }
         }
 
+        const rentalResponse: Partial<Rental> = {...rental};
+
+        delete rentalResponse.paymentUid;
+
         res.status(200).send({
-            ...rental,
+            ...rentalResponse,
             dateFrom: rental.dateFrom.toISOString().split('T')[0],
-            dateTo: rental.dateTo.toISOString().split('T')[0]
+            dateTo: rental.dateTo.toISOString().split('T')[0],
+            payment: payment
         });
     }
 
