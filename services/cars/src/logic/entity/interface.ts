@@ -12,7 +12,7 @@ export interface Car {
     available: boolean;
 }
 
-export type CarId = Exclude<Car['id'], undefined>;
+export type CarId = string;
 
 export interface CarFilter extends EntityPaginationFilter {
     showAll: boolean;

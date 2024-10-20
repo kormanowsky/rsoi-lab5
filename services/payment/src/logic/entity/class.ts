@@ -16,7 +16,7 @@ export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, Paymen
         throw new Error(`Unexpected type of sample id: ${typeOfSampleId}`);
     }
 
-    async getOne(id: number): Promise<Payment | null> {
+    async getOne(id: PaymentId): Promise<Payment | null> {
         this.validateId(id);
 
         return this.storage.getOne(id);
@@ -44,22 +44,22 @@ export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, Paymen
         return this.storage.create(entity);
     }
 
-    async update(id: number, update: Partial<Payment>): Promise<Payment> {
+    async update(id: PaymentId, update: Partial<Payment>): Promise<Payment> {
         this.validateId(id);
         this.validatePartialEntity(update);
 
         return this.storage.update(id, update);
     }
 
-    async delete(id: number): Promise<boolean> {
+    async delete(id: PaymentId): Promise<boolean> {
         this.validateId(id);
 
         return this.storage.delete(id);
     }
 
-    validateId(id: number): void {
-        if (id <= 0) {
-            throw new Error(`Invalid payment id: ${id} <= 0`);
+    validateId(id: PaymentId): void {
+        if (id.length === 0) {
+            throw new Error(`Invalid payment id: ${id}`);
         }
     }
 

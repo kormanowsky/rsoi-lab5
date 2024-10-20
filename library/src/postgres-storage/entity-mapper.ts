@@ -1,8 +1,9 @@
 import { EntityPaginationData, EntityPaginationFilter } from "../logic";
 
-export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string | number = number> {
-    constructor(tableName: string, sampleId: TId) {
+export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string | number = string> {
+    constructor(tableName: string, idColumnName: string, sampleId: TId) {
         this.tableName = tableName;
+        this.idColumnName = idColumnName;
         this.sampleId = sampleId;
     }
 
@@ -22,15 +23,15 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
     getSelectQueryForId(id: TId): [string, unknown[], unknown[]] {
         if (typeof id === 'string') {
             return [
-                `SELECT * FROM %I WHERE id = $1::TEXT`, 
-                [this.getTableName()],
+                `SELECT * FROM %I WHERE %I = $1::UUID`, 
+                [this.getTableName(), this.getIdColumnName()], 
                 [id]
             ];
         }
 
         return [
-            `SELECT * FROM %I WHERE id = $1::INTEGER`,
-            [this.getTableName()],
+            `SELECT * FROM %I WHERE %I = $1::INTEGER`,
+            [this.getTableName(), this.getIdColumnName()], 
             [id]
         ];
     }
@@ -38,15 +39,15 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
     getDeleteQueryForId(id: TId): [string, unknown[], unknown[]] {
         if (typeof id === 'string') {
             return [
-                `DELETE FROM %I WHERE id = $1::TEXT`, 
-                [this.getTableName()], 
+                `DELETE FROM %I WHERE %I = $1::UUID`, 
+                [this.getTableName(), this.getIdColumnName()], 
                 [id]
             ];
         }
 
         return [
-            `DELETE FROM %I WHERE id = $1::INTEGER`,
-            [this.getTableName()], 
+            `DELETE FROM %I WHERE %I = $1::INTEGER`,
+            [this.getTableName(), this.getIdColumnName()], 
             [id]
         ];
     }
@@ -59,6 +60,11 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
         return this.tableName;
     }
 
+    getIdColumnName(): string {
+        return this.idColumnName;
+    }
+
     private tableName: string;
+    private idColumnName: string;
     private sampleId: TId;
 }

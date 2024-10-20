@@ -5,7 +5,7 @@ export interface Payment {
     price: number;
 }
 
-export type PaymentId = number;
+export type PaymentId = string;
 
 export interface PaymentFilter {
     // TODO: что тут должно быть?

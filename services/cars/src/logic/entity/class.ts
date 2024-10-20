@@ -16,7 +16,7 @@ export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
         throw new Error(`Unexpected type of sample id: ${typeOfSampleId}`);
     }
 
-    async getOne(id: number): Promise<Car | null> {
+    async getOne(id: CarId): Promise<Car | null> {
         this.validateId(id);
 
         return this.storage.getOne(id);
@@ -44,22 +44,22 @@ export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
         return this.storage.create(entity);
     }
 
-    async update(id: number, update: Partial<Car>): Promise<Car> {
+    async update(id: CarId, update: Partial<Car>): Promise<Car> {
         this.validateId(id);
         this.validatePartialEntity(update);
 
         return this.storage.update(id, update);
     }
 
-    async delete(id: number): Promise<boolean> {
+    async delete(id: CarId): Promise<boolean> {
         this.validateId(id);
 
         return this.storage.delete(id);
     }
 
-    validateId(id: number): void {
-        if (id <= 0) {
-            throw new Error(`Invalid car id: ${id} <= 0`);
+    validateId(id: CarId): void {
+        if (id.length === 0) {
+            throw new Error(`Invalid car id: ${id}`);
         }
     }
 

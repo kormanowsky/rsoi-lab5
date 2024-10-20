@@ -9,7 +9,7 @@ export interface Rental {
     status: 'IN_PROGRESS' | 'FINISHED' | 'CANCELED';
 }
 
-export type RentalId = number;
+export type RentalId = string;
 
 export interface RentalFilter {
     username: string;

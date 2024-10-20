@@ -3,7 +3,7 @@ import { Car, CarFilter, CarId } from "../logic";
 
 export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarId> {
     constructor(tableName: string) {
-        super(tableName, 0);
+        super(tableName, 'car_uid', '00000000-0000-0000-0000-000000000001');
     }
 
     getInsertQueryForEntity(entity: Car): [string, unknown[], unknown[]] {

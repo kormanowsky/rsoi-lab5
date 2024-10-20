@@ -1,6 +1,6 @@
 import { EntityCRUD } from "../logic";
 
-export class EntityClient<TEnt, TEntFilter, TId extends string | number = number> 
+export class EntityClient<TEnt, TEntFilter, TId extends string | number = string> 
     implements EntityCRUD<TEnt, TEntFilter, TId> 
 {
     constructor(baseUrl: string) {
@@ -8,7 +8,7 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = number
     }
 
     async getOne(id: TId, opts?: RequestInit): Promise<TEnt | null> {
-        const response = await fetch(`${this.baseUrl}/${id}`, {
+        const response = await fetch(`${this.baseUrl}${id}`, {
             ...opts,
             method: 'GET'
         });
@@ -58,7 +58,7 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = number
     }
 
     async update(id: TId, update: Partial<TEnt>, opts?: RequestInit): Promise<TEnt> {
-        const response = await fetch(`${this.baseUrl}/${id}`, {
+        const response = await fetch(`${this.baseUrl}${id}`, {
             ...opts,
             method: 'PATCH',
             headers: {
@@ -76,7 +76,7 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = number
     }
 
     async delete(id: TId, opts?: RequestInit): Promise<boolean> {
-        const response = await fetch(`${this.baseUrl}/${id}`, {
+        const response = await fetch(`${this.baseUrl}${id}`, {
             ...opts,
             method: 'DELETE'
         });

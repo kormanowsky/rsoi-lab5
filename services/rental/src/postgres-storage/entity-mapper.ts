@@ -3,7 +3,7 @@ import { Rental, RentalFilter, RentalId } from "../logic";
 
 export class PostgresRentalMapper extends PostgresEntityMapper<Rental, RentalFilter, RentalId> {
     constructor(tableName: string) {
-        super(tableName, 0);
+        super(tableName, 'rental_uid', '00000000-0000-0000-0000-000000000001');
     }
 
     getInsertQueryForEntity(entity: Rental): [string, unknown[], unknown[]] {

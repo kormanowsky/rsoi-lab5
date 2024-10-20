@@ -16,7 +16,7 @@ export class RentalLogic implements EntityLogic<Rental, RentalFilter, RentalId> 
         throw new Error(`Unexpected type of sample id: ${typeOfSampleId}`);
     }
 
-    async getOne(id: number): Promise<Rental | null> {
+    async getOne(id: RentalId): Promise<Rental | null> {
         this.validateId(id);
 
         return this.storage.getOne(id);
@@ -44,22 +44,22 @@ export class RentalLogic implements EntityLogic<Rental, RentalFilter, RentalId> 
         return this.storage.create(entity);
     }
 
-    async update(id: number, update: Partial<Rental>): Promise<Rental> {
+    async update(id: RentalId, update: Partial<Rental>): Promise<Rental> {
         this.validateId(id);
         this.validatePartialEntity(update);
 
         return this.storage.update(id, update);
     }
 
-    async delete(id: number): Promise<boolean> {
+    async delete(id: RentalId): Promise<boolean> {
         this.validateId(id);
 
         return this.storage.delete(id);
     }
 
-    validateId(id: number): void {
-        if (id <= 0) {
-            throw new Error(`Invalid rental id: ${id} <= 0`);
+    validateId(id: RentalId): void {
+        if (id.length === 0) {
+            throw new Error(`Invalid rental id: ${id}`);
         }
     }
 
