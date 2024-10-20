@@ -36,7 +36,7 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
             return [
                 `SELECT * FROM %I ORDER BY car_uid LIMIT $1::INTEGER OFFSET $2::INTEGER;`,
                 [this.getTableName()], 
-                [filter.size, filter.page]
+                [filter.size, (filter.page - 1) * filter.size]
             ];
         }
 
@@ -44,7 +44,7 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
             `SELECT * FROM %I WHERE availability = TRUE ORDER BY car_uid 
             LIMIT $1::INTEGER OFFSET $2::INTEGER;`,
             [this.getTableName()], 
-            [filter.size, filter.page]
+            [filter.size, (filter.page - 1) * filter.page]
         ];
     }
 
