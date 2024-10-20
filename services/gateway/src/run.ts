@@ -1,4 +1,4 @@
-import { CarsClient } from "./client";
+import { CarsClient, PaymentsClient, RentalsClient } from "./client";
 import { GatewayServer } from "./server";
 
 const 
@@ -7,6 +7,8 @@ const
     paymentApiUrl = process.env.PAYMENT_API_URL!,
     rentalApiUrl = process.env.RENTAL_API_URL!,
     carsClient = new CarsClient(carsApiUrl),
-    server = new GatewayServer(carsClient, port);
+    paymentsClient = new PaymentsClient(paymentApiUrl),
+    rentalsClient = new RentalsClient(rentalApiUrl),
+    server = new GatewayServer(carsClient, paymentsClient, rentalsClient, port);
 
 server.start();

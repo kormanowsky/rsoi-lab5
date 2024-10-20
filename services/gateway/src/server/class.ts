@@ -1,13 +1,21 @@
 import { Request, Response } from 'express';
 import {Server} from '@rsoi-lab2/library';
-import { CarsClient } from '../client';
+import { CarsClient, PaymentsClient, RentalsClient } from '../client';
 import { Car, CarFilter } from '../../../cars/src/logic';
 import { Rental } from '../../../rental/src/logic';
+import { Payment } from '../../../payment/src/logic';
 
 export class GatewayServer extends Server {
-    constructor(carsClient: CarsClient, port: number) {
+    constructor(
+        carsClient: CarsClient, 
+        paymentsClient: PaymentsClient,
+        rentalsClient: RentalsClient,
+        port: number
+    ) {
         super(port);
         this.carsClient = carsClient;
+        this.paymentsClient = paymentsClient;
+        this.rentalsClient = rentalsClient;
     }
 
     protected initRoutes(): void {
@@ -47,6 +55,13 @@ export class GatewayServer extends Server {
             return;
         }
 
+        const rentalDays = (rental.dateTo!.getTime() - rental.dateFrom!.getTime()) / (1000 * 3600 * 24);
+
+        if (rentalDays <= 0) {
+            res.status(400).send({error: 'Rental may not finish before start'});
+            return;
+        }
+
         rental.username = username;
 
         let car: Car | null;
@@ -69,9 +84,22 @@ export class GatewayServer extends Server {
             return;
         }
 
-        // TODO: payment, rental, etc
+        const totalPrice = car.price * rentalDays;
 
-        res.status(200).send();
+        let payment: Payment;
+
+        try {
+            payment = await this.paymentsClient.create({
+                status: 'PAID',
+                price: totalPrice
+            });
+        } catch (err) {
+            res.status(500).send({error: 'Payment service failure'});
+            console.error(err);
+            return;
+        }
+
+        res.status(200).send(payment);
     }
 
     protected parseRentalRequest(data: unknown): Partial<Rental> {
@@ -104,4 +132,6 @@ export class GatewayServer extends Server {
     }
 
     private carsClient: CarsClient;
+    private paymentsClient: PaymentsClient;
+    private rentalsClient: RentalsClient;
 }

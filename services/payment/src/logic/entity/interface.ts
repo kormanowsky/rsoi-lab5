@@ -1,6 +1,6 @@
 export interface Payment {
-    id: number;
-    paymentUid: string;
+    id?: number;
+    paymentUid?: string;
     status: 'PAID' | 'CANCELED';
     price: number;
 }

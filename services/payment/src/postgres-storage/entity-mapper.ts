@@ -3,10 +3,24 @@ import { Payment, PaymentFilter, PaymentId } from "../logic";
 
 export class PostgresPaymentMapper extends PostgresEntityMapper<Payment, PaymentFilter, PaymentId> {
     constructor(tableName: string) {
-        super(tableName, 0);
+        super(tableName, 'payment_uid', '00000000-0000-0000-0000-000000000001');
     }
 
     getInsertQueryForEntity(entity: Payment): [string, unknown[], unknown[]] {
+        if (entity.paymentUid == null) {
+            return [
+                `INSERT INTO %I
+                (payment_uid, status, price)
+                VALUES(gen_random_uuid(), $1::TEXT, $2::INTEGER)
+                RETURNING *;`,
+                [this.getTableName()],
+                [
+                    entity.status,
+                    entity.price
+                ]
+            ];
+        }
+
         return [
             `INSERT INTO %I
             (payment_uid, status, price)
