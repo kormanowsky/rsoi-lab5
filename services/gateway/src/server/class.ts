@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
-import {Server} from '@rsoi-lab2/library';
+import { Server, Car, Rental, Payment } from '@rsoi-lab2/library';
 import { CarsClient, PaymentsClient, RentalsClient } from '../client';
-import { Car, CarFilter } from '../../../cars/src/logic';
-import { Rental } from '../../../rental/src/logic';
-import { Payment } from '../../../payment/src/logic';
 
 type RentalResponseBase = Omit<Partial<Rental>, 'dateFrom' | 'dateTo'> & {
     dateFrom: string;

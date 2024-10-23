@@ -1,4 +1,3 @@
-import { EntityClient } from "@rsoi-lab2/library";
-import { Car, CarFilter, CarId } from "../../../cars/src/logic";
+import { EntityClient, Car, CarFilter, CarId } from "@rsoi-lab2/library";
 
 export class CarsClient extends EntityClient<Car, CarFilter, CarId>{}
