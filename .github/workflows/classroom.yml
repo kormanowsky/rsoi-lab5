@@ -2,7 +2,7 @@ name: GitHub Classroom Workflow
 on:
   push:
     branches:
-      - dev-endpoints
+      - dev-todo-crud-services
   pull_request:
     branches:
       - master
