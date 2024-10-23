@@ -19,6 +19,7 @@ services:
   cars-postgres:
     image: library/postgres:13
     container_name: cars-postgres
+    pull_policy: if_not_present
     restart: on-failure
     environment:
       POSTGRES_USER: postgres
@@ -47,6 +48,7 @@ services:
   rental-postgres:
     image: library/postgres:13
     container_name: rental-postgres
+    pull_policy: if_not_present
     restart: on-failure
     environment:
       POSTGRES_USER: postgres
@@ -75,6 +77,7 @@ services:
   payment-postgres:
     image: library/postgres:13
     container_name: payment-postgres
+    pull_policy: if_not_present
     restart: on-failure
     environment:
       POSTGRES_USER: postgres

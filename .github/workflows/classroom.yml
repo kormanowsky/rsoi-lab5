@@ -26,6 +26,9 @@ jobs:
       - name: Run Rental Unit Tests 
         run: cd services/rental && npm ci && npm run test
 
+      - name: Pull postgres image 
+        run: docker pull postgres:13
+
       - name: Build images
         timeout-minutes: 10
         run: docker compose build
