@@ -58,18 +58,35 @@ export class RentalLogic implements EntityLogic<Rental, RentalFilter, RentalId> 
     }
 
     validateEntity(value: Rental): void {
-        // TODO:
-        return;
+        for(const key of ['carUid', 'paymentUid', 'username', 'dateFrom', 'dateTo']) {
+            if (!value.hasOwnProperty(key)) {
+                throw new Error(`Invalid rental: must contain value in ${key} key`);
+            }
+        }
+
+        this.validatePartialEntity(value);
     }
 
     validateFilter(value: RentalFilter): void {
-        // TODO:
-        return;
+        if(value.username.length === 0) {
+            throw new Error('Invalid rental filter: has empty username');
+        }
     }
 
     validatePartialEntity(value: Partial<Rental>): void {
-        // TODO:
-        return;
+        if (
+            value.hasOwnProperty('dateFrom') && 
+            value.hasOwnProperty('dateTo') && 
+            value.dateFrom!.getTime() > value.dateTo!.getTime()
+        ) {
+            throw new Error('Invalid rental: has wrong dates order');
+        }
+
+        for(const key of ['carUid', 'paymentUid', 'username']) {
+            if (value.hasOwnProperty(key) && value[key].length === 0) {
+                throw new Error(`Invalid rental: must contain non-empty string in key ${key}`);
+            }
+        }
     }
 
     private storage: EntityStorage<Rental, RentalFilter, RentalId>;
