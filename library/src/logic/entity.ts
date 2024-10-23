@@ -34,18 +34,23 @@ export interface EntityValidator<TEnt, TEntFilter, TId extends string | number =
     validateFilter(value: TEntFilter): void;
 }
 
-export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = string>
-    extends EntityCRUD<TEnt, TEntFilter, TId>, 
-        EntityPaginator<TEnt, TEntFilter>,
-        EntityValidator<TEnt, TEntFilter, TId> {
+export interface EntityIdTypeSwitch {
     // ID может быть как строкой так и числом
     getIdType(): 'string' | 'number';
 }
 
+export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = string>
+    extends EntityCRUD<TEnt, TEntFilter, TId>, 
+        EntityPaginator<TEnt, TEntFilter>,
+        EntityValidator<TEnt, TEntFilter, TId>,
+        EntityIdTypeSwitch {
+    
+}
+
 export interface EntityStorage<TEnt, TEntFilter, TId extends string | number = string>
-    extends EntityCRUD<TEnt, TEntFilter, TId>, EntityPaginator<TEnt, TEntFilter> {
-    // Возвраащет пример ID для этого хранилища
-    getSampleId(): TId;
+    extends EntityCRUD<TEnt, TEntFilter, TId>, 
+        EntityPaginator<TEnt, TEntFilter>,
+        EntityIdTypeSwitch {
 }
 
 export interface EntityParser<TEnt, TEntFilter, TId extends string | number = string> {

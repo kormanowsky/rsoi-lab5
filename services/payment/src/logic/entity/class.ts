@@ -7,13 +7,7 @@ export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, Paymen
     }
 
     getIdType(): "string" | "number" {
-        const typeOfSampleId = typeof this.storage.getSampleId();
-
-        if (["string", "number"].includes(typeOfSampleId)) {
-            return <'string' | 'number'>typeOfSampleId;
-        }
-
-        throw new Error(`Unexpected type of sample id: ${typeOfSampleId}`);
+        return this.storage.getIdType();
     }
 
     async getOne(id: PaymentId): Promise<Payment | null> {
