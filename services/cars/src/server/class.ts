@@ -35,7 +35,7 @@ export class CarsServer extends EntityServer<Car, CarFilter, CarId> {
         for(const key of ['price', 'power']) {
             if (
                 value.hasOwnProperty(key) && 
-                (typeof value[key] !== 'number')
+                (typeof value[key] !== 'number' || isNaN(value[key]))
             ) {
                 throw new Error(`Invalid car: has non-positive ${key}`);
             }

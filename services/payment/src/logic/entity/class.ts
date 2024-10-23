@@ -58,18 +58,33 @@ export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, Paymen
     }
 
     validateEntity(value: Payment): void {
-        // TODO:
-        return;
+        for(const key of [
+            'status', 'price'
+        ]) {
+            if (!value.hasOwnProperty(key)) {
+                throw new Error(`Invalid payment: has no ${key} field value`);
+            }
+        }
+
+        this.validatePartialEntity(value);
     }
 
     validateFilter(value: PaymentFilter): void {
-        // TODO:
+        // Пока нет фильтров для оплат
         return;
     }
 
     validatePartialEntity(value: Partial<Payment>): void {
-        // TODO:
-        return;
+        if (
+            value.hasOwnProperty('status') && 
+            !['PAID', 'CANCELED'].includes(value.status!)
+        ) {
+            throw new Error('Invalid payment: invalid status');
+        }
+
+        if (value.hasOwnProperty('price') && value.price! <= 0) {
+            throw new Error('Invalid payment: price must be positive');
+        }
     }
 
     private storage: EntityStorage<Payment, PaymentFilter, PaymentId>;

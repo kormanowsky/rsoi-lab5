@@ -7,6 +7,5 @@ export interface Payment {
 
 export type PaymentId = string;
 
-export interface PaymentFilter {
-    // TODO: что тут должно быть?
-}
+// Намеренно пустой интерфейс
+export interface PaymentFilter {}
