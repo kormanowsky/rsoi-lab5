@@ -58,18 +58,43 @@ export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
     }
 
     validateEntity(value: Car): void {
-        // TODO:
-        return;
+        for(const key of [
+            'brand', 'model', 'registrationNumber', 
+            'price', 'power', 'type', 'available'
+        ]) {
+            if (!value.hasOwnProperty(key)) {
+                throw new Error(`Invalid car: has no ${key} field value`);
+            }
+        }
+
+        this.validatePartialEntity(value);
     }
 
     validateFilter(value: CarFilter): void {
-        // TODO:
-        return;
+        if (value.page <= 0 || value.size <= 0) {
+            throw new Error('Invalid car filter: page and size must be both positive');
+        }
     }
 
     validatePartialEntity(value: Partial<Car>): void {
-        // TODO:
-        return;
+        for(const key of ['carUid', 'brand', 'model', 'registrationNumber']) {
+            if (value.hasOwnProperty(key) && value[key].length === 0) {
+                throw new Error(`Invalid car: has empty ${key}`);
+            }
+        }
+
+        for(const key of ['price', 'power']) {
+            if (value.hasOwnProperty(key) && value[key] <= 0) {
+                throw new Error(`Invalid car: has non-positive ${key}`);
+            }
+        }
+
+        if (
+            value.hasOwnProperty('type') && 
+            !['SEDAN', 'SUV', 'MINIVAN', 'ROADSTER'].includes(value.type ?? '')
+        ) {
+            throw new Error(`Invalid car: has invalid type`);
+        }
     }
 
     private storage: EntityStorage<Car, CarFilter, CarId>;

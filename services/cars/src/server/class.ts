@@ -4,13 +4,52 @@ import { Car, CarFilter, CarId } from '../logic';
 
 export class CarsServer extends EntityServer<Car, CarFilter, CarId> {
     parseEntity(value: unknown): Car {
-        // TODO: 
-        return <Car>value;
+        const partialCar = this.parsePartialEntity(value);
+
+        for(const key of [
+            'brand', 'model', 'registrationNumber', 
+            'price', 'power', 'type', 'available'
+        ]) {
+            if (!partialCar.hasOwnProperty(key)) {
+                throw new Error(`Invalid car: has no ${key} field value`);
+            }
+        }
+
+        return <Car>partialCar;
     }
 
     parsePartialEntity(value: unknown): Partial<Car> {
-        // TODO: 
-        return <Car>value;
+        if (typeof value !== 'object' || value == null) {
+            throw new Error('Invalid car: must be non-nullish object');
+        }
+
+        for(const key of ['carUid', 'brand', 'model', 'registrationNumber']) {
+            if (
+                value.hasOwnProperty(key) && 
+                (typeof value[key] !== 'string')
+            ) {
+                throw new Error(`Invalid car: has empty or non-string ${key}`);
+            }
+        }
+
+        for(const key of ['price', 'power']) {
+            if (
+                value.hasOwnProperty(key) && 
+                (typeof value[key] !== 'number')
+            ) {
+                throw new Error(`Invalid car: has non-positive ${key}`);
+            }
+        }
+
+        if (value.hasOwnProperty('type') && typeof value['type'] !== 'string') {
+            throw new Error(`Invalid car: has invalid type`);
+        }
+        
+        if (value.hasOwnProperty('available') && typeof value['available'] !== 'boolean') {
+            throw new Error(`Invalid car: has invalid available field value`);
+        }
+
+        return <Partial<Car>>value;
     }
 
     parseFilter(value: unknown): CarFilter {
@@ -46,8 +85,8 @@ export class CarsServer extends EntityServer<Car, CarFilter, CarId> {
             pageAsInt = parseInt(valueAsRecord.page, 10),
             sizeAsInt = parseInt(valueAsRecord.size, 10);
 
-        if (isNaN(pageAsInt) || isNaN(sizeAsInt) || pageAsInt <= 0 || sizeAsInt <= 0) {
-            throw new Error('Bad Filter: page and size must be ints >= 1'); 
+        if (isNaN(pageAsInt) || isNaN(sizeAsInt)) {
+            throw new Error('Bad Filter: page and size must be ints'); 
         }
 
         filter.page = pageAsInt;
