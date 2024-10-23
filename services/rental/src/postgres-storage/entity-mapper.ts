@@ -33,12 +33,4 @@ export class PostgresRentalMapper extends PostgresEntityMapper<Rental, RentalFil
     getSelectTotalCountQueryForFilter(_: RentalFilter): [string, unknown[], unknown[]] {
         throw new Error(`getSelectTotalCountQueryForFilter() is not implemented in PostgresRentalMapper`);
     }
-
-    getPaginatedEntities(
-        _: Array<Record<string, unknown>>, 
-        __: EntityPaginationFilter, 
-        ___: Record<string, unknown>
-    ) {
-        throw new Error(`getPaginatedEntities() is not implemented in PostgresRentalMapper`);
-    }
 }

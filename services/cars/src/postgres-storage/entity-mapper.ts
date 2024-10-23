@@ -53,17 +53,4 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
             queryParams.slice(0, -2),
         ];
     }
-
-    getPaginatedEntities(
-        entityRows: Array<Record<string, unknown>>, 
-        filter: EntityPaginationFilter, 
-        totalCountRow: Record<string, unknown>
-    ): EntityPaginationData<Car> {
-        return {
-            items: entityRows.map((row) => this.getEntityFromRow(row)),
-            totalElements: parseInt(<string>totalCountRow.total_count, 10),
-            page: filter.page,
-            pageSize: filter.size
-        };
-    }
 }

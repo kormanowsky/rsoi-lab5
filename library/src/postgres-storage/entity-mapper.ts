@@ -7,30 +7,11 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
         this.sampleId = sampleId;
     }
 
+    abstract getEntityPropsToColumnsMap(): Record<keyof TEnt, [string | true, string]>;
+
     abstract getSelectQueryForFilter(filter: TEntFilter): [string, unknown[], unknown[]];
     abstract getPaginatedSelectQueryForFilter(filter: TEntFilter & EntityPaginationFilter): [string, unknown[], unknown[]];
     abstract getSelectTotalCountQueryForFilter(filter: TEntFilter): [string, unknown[], unknown[]];
-
-    abstract getEntityPropsToColumnsMap(): Record<keyof TEnt, [string | true, string]>;
-
-    abstract getPaginatedEntities(
-        entityRows: Array<Record<string, unknown>>, 
-        filter: EntityPaginationFilter, 
-        totalCountRow: Record<string, unknown>
-    );
-
-    getEntityFromRow(row: Record<string, unknown>): TEnt {
-        return <TEnt>Object.entries<[string | true, string]>(
-            this.getEntityPropsToColumnsMap()
-        ).reduce<Partial<TEnt>>((acc, [key, [rowKey]]) => {
-            const realRowKey = rowKey === true ? key : rowKey;
-            if (!row.hasOwnProperty(realRowKey)) {
-                throw new Error(`Row from storage misses key: ${key}`);
-            }
-            acc[key] = row[realRowKey];
-            return acc;
-        }, {});
-    }
 
     getSelectQueryForId(id: TId): [string, unknown[], unknown[]] {
         if (typeof id === 'string') {
@@ -123,6 +104,32 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
             [this.getTableName(), this.getIdColumnName()], 
             [id]
         ];
+    }
+
+    getPaginatedEntities(
+        entityRows: Array<Record<string, unknown>>, 
+        filter: EntityPaginationFilter, 
+        totalCountRow: Record<string, unknown>
+    ): EntityPaginationData<TEnt> {
+        return {
+            items: entityRows.map((row) => this.getEntityFromRow(row)),
+            totalElements: parseInt(<string>(totalCountRow.total_count ?? '0'), 10),
+            page: filter.page,
+            pageSize: filter.size
+        };
+    }
+
+    getEntityFromRow(row: Record<string, unknown>): TEnt {
+        return <TEnt>Object.entries<[string | true, string]>(
+            this.getEntityPropsToColumnsMap()
+        ).reduce<Partial<TEnt>>((acc, [key, [rowKey]]) => {
+            const realRowKey = rowKey === true ? key : rowKey;
+            if (!row.hasOwnProperty(realRowKey)) {
+                throw new Error(`Row from storage misses key: ${key}`);
+            }
+            acc[key] = row[realRowKey];
+            return acc;
+        }, {});
     }
 
     getSampleId(): TId {

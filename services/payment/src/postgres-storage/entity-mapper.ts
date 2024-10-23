@@ -29,12 +29,4 @@ export class PostgresPaymentMapper extends PostgresEntityMapper<Payment, Payment
     getSelectTotalCountQueryForFilter(_: PaymentFilter): [string, unknown[], unknown[]] {
         throw new Error(`getSelectTotalCountQueryForFilter() is not implemented in PostgresPaymentMapper`);
     }
-
-    getPaginatedEntities(
-        _: Array<Record<string, unknown>>, 
-        __: EntityPaginationFilter, 
-        ___: Record<string, unknown>
-    ) {
-        throw new Error(`getPaginatedEntities() is not implemented in PostgresPaymentMapper`);
-    }
 }
