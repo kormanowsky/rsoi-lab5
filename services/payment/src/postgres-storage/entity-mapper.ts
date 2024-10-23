@@ -15,37 +15,8 @@ export class PostgresPaymentMapper extends PostgresEntityMapper<Payment, Payment
         };
     }
 
-    getInsertQueryForEntity(entity: Payment): [string, unknown[], unknown[]] {
-        if (entity.paymentUid == null) {
-            return [
-                `INSERT INTO %I
-                (payment_uid, status, price)
-                VALUES(gen_random_uuid(), $1::TEXT, $2::INTEGER)
-                RETURNING *;`,
-                [this.getTableName()],
-                [
-                    entity.status,
-                    entity.price
-                ]
-            ];
-        }
-
-        return [
-            `INSERT INTO %I
-            (payment_uid, status, price)
-            VALUES($1::UUID, $2::TEXT, $3::INTEGER)
-            RETURNING *;`,
-            [this.getTableName()],
-            [
-                entity.paymentUid,
-                entity.status,
-                entity.price
-            ]
-        ];
-    }
-
-    getSelectQueryForFilter(filter: PaymentFilter): [string, unknown[], unknown[]] {
-        return ['SELECT * FROM %I WHERE availability = TRUE ORDER BY payment_uid',
+    getSelectQueryForFilter(_: PaymentFilter): [string, unknown[], unknown[]] {
+        return ['SELECT * FROM %I ORDER BY payment_uid',
             [this.getTableName()], 
             []
         ];

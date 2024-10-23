@@ -6,35 +6,6 @@ export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarI
         super(tableName, 'car_uid', '00000000-0000-0000-0000-000000000001');
     }
 
-    getInsertQueryForEntity(entity: Car): [string, unknown[], unknown[]] {
-        let uidValue = '';
-
-        if (entity.carUid == null) {
-            uidValue = 'gen_random_uuid()'
-        } else {
-            uidValue = '$8::UUID';
-        }
-
-        return [
-            `INSERT INTO %I
-            (brand, model, registration_number, power, price, type, availablity, car_uid)
-            VALUES($1::TEXT, $2::TEXT, $3::TEXT, $4::INTEGER, $5::INTEGER, $6::TEXT, $7::BOOLEAN, ${uidValue})
-            RETURNING *;`,
-            [this.getTableName()],
-            [
-                entity.carUid,
-                entity.brand, 
-                entity.model,
-                entity.registrationNumber,
-                entity.power,
-                entity.price,
-                entity.type,
-                entity.available,
-                ...(entity.carUid == null ? [] : [entity.carUid])
-            ]
-        ];
-    }
-
     getEntityPropsToColumnsMap(): Record<keyof Car, [string | true, string]> {
         return {
             id: [true, 'INTEGER'],

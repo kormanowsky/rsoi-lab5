@@ -7,7 +7,6 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
         this.sampleId = sampleId;
     }
 
-    abstract getInsertQueryForEntity(entity: TEnt): [string, unknown[], unknown[]];
     abstract getSelectQueryForFilter(filter: TEntFilter): [string, unknown[], unknown[]];
     abstract getPaginatedSelectQueryForFilter(filter: TEntFilter & EntityPaginationFilter): [string, unknown[], unknown[]];
     abstract getSelectTotalCountQueryForFilter(filter: TEntFilter): [string, unknown[], unknown[]];
@@ -46,6 +45,33 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
             `SELECT * FROM %I WHERE %I = $1::INTEGER`,
             [this.getTableName(), this.getIdColumnName()], 
             [id]
+        ];
+    }
+
+    getInsertQueryForEntity(entity: TEnt): [string, unknown[], unknown[]] {
+        const 
+            columns: string[] = [],
+            placeholders: string[] = [],
+            values: unknown[] = [],
+            entityAsMap = <{[K in keyof TEnt]: TEnt[K]}>entity;
+        
+        for(const [key, [rowKey, rowValueType]] of Object.entries<[string | true, string]>(this.getEntityPropsToColumnsMap())) {
+            const columnName = rowKey === true ? key : rowKey;
+            
+            if (entityAsMap.hasOwnProperty(key)) {
+                columns.push(columnName);
+                placeholders.push(`$${values.length + 1}::${rowValueType}`)
+                values.push(entity[key]);
+            } else if (columnName === this.getIdColumnName() && typeof this.getSampleId() === 'string') {
+                columns.push(columnName);
+                placeholders.push('gen_random_uuid()');
+            }
+        }
+
+        return [
+            `INSERT INTO %I (${columns.join(',')}) VALUES(${placeholders.join(',')}) RETURNING *`,
+            [this.getTableName()],
+            values
         ];
     }
 
