@@ -3,8 +3,15 @@ import { Rental, RentalFilter, RentalId } from '../logic';
 
 export class RentalServer extends EntityServer<Rental, RentalFilter, RentalId> {
     parseEntity(value: unknown): Rental {
-        // TODO:
-        return <Rental>value;
+        const partialRental = this.parsePartialEntity(value);
+
+        for(const key of ['carUid', 'paymentUid', 'username', 'dateFrom', 'dateTo']) {
+            if (!partialRental.hasOwnProperty(key)) {
+                throw new Error(`Invalid rental: must contain value in ${key} key`);
+            }
+        }
+
+        return <Rental>partialRental;
     }
 
     parseFilter(value: unknown): RentalFilter {
@@ -30,7 +37,28 @@ export class RentalServer extends EntityServer<Rental, RentalFilter, RentalId> {
     }
 
     parsePartialEntity(value: unknown): Partial<Rental> {
-        // TODO:
-        return <Rental>value;
+        if (typeof value !== 'object' || value == null) {
+            throw new Error('Invalid rental: must be non-nullish object');
+        }
+
+        for(const key of ['carUid', 'paymentUid', 'username']) {
+            if (value.hasOwnProperty(key) && typeof value[key] !== 'string') {
+                throw new Error(`Invalid rental: must contain string in key ${key}`);
+            }
+        }
+
+        for(const key of ['dateFrom', 'dateTo']) {
+            if (value.hasOwnProperty(key)) {
+                const dateFromKey = new Date(value[key]); 
+
+                if (isNaN(dateFromKey.getTime())) {
+                    throw new Error(`Invalid rental: must contain valid date in key ${key}`);
+                }
+
+                value[key] = dateFromKey;
+            }
+        }
+
+        return <Partial<Rental>>value;
     }
 }

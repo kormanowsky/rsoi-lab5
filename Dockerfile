@@ -19,4 +19,4 @@ COPY services/${SERVICE}/package*.json .
 
 RUN npm install
 
-CMD ["npx", "tsx", "./src/run.ts"]
+CMD ["npm", "run", "serve"]

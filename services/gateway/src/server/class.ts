@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
-import {Server} from '@rsoi-lab2/library';
+import { Server, Car, Rental, Payment } from '@rsoi-lab2/library';
 import { CarsClient, PaymentsClient, RentalsClient } from '../client';
-import { Car, CarFilter } from '../../../cars/src/logic';
-import { Rental } from '../../../rental/src/logic';
-import { Payment } from '../../../payment/src/logic';
 
 type RentalResponseBase = Omit<Partial<Rental>, 'dateFrom' | 'dateTo'> & {
     dateFrom: string;
@@ -195,8 +192,17 @@ export class GatewayServer extends Server {
             return;
         }
 
-        // TODO: parse id?
-        this.rentalsClient.getOne(req.params.id).then(async (rental) => {
+        let parsedId: Rental['rentalUid'];
+
+        try {
+            parsedId = this.parseId(req.params.id);
+        } catch (err) {
+            res.status(400).send({error: 'Bad ID'});
+            console.error(err);
+            return;
+        }
+
+        this.rentalsClient.getOne(parsedId).then(async (rental) => {
             if (rental == null || rental.username !== username) {
                 res.status(404).send({error: 'No such rental'});
                 return;
@@ -217,8 +223,17 @@ export class GatewayServer extends Server {
             return;
         }
 
-        // TODO: parse id?
-        this.rentalsClient.getOne(req.params.id).then(async (rental) => {
+        let parsedId: Rental['rentalUid'];
+
+        try {
+            parsedId = this.parseId(req.params.id);
+        } catch (err) {
+            res.status(400).send({error: 'Bad ID'});
+            console.error(err);
+            return;
+        }
+
+        this.rentalsClient.getOne(parsedId).then(async (rental) => {
             if (rental == null || rental.username !== username) {
                 res.status(404).send({error: 'No such rental'});
                 return;
@@ -242,8 +257,17 @@ export class GatewayServer extends Server {
             return;
         }
 
-        // TODO: parse id?
-        this.rentalsClient.getOne(req.params.id).then(async (rental) => {
+        let parsedId: Rental['rentalUid'];
+
+        try {
+            parsedId = this.parseId(req.params.id);
+        } catch (err) {
+            res.status(400).send({error: 'Bad ID'});
+            console.error(err);
+            return;
+        }
+
+        this.rentalsClient.getOne(parsedId).then(async (rental) => {
             if (rental == null || rental.username !== username) {
                 res.status(404).send({error: 'No such rental'});
                 return;
@@ -258,6 +282,14 @@ export class GatewayServer extends Server {
             res.status(500).send({error: 'Internal failure'});
             console.error(err);
         });
+    }
+
+    protected parseId(value: unknown): string {
+        if (typeof value !== 'string') {
+            throw new Error(`Invalid id: must be a string, got: ${value}`);
+        }
+
+        return value;
     }
 
     protected parseRentalRequest(data: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {

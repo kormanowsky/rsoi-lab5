@@ -1,5 +1,6 @@
 import pg, { QueryResult } from 'pg';
 import pgFormat from 'pg-format';
+
 import { EntityStorage, EntityPaginationData, EntityPaginationFilter } from "../logic";
 import { PostgresEntityMapper } from "./entity-mapper";
 
@@ -11,8 +12,14 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         this.ready = this.client.connect();
     }
 
-    getSampleId(): TId {
-        return this.mapper.getSampleId();
+    getIdType(): "string" | "number" {
+        const typeOfSampleId = typeof this.mapper.getSampleId();
+
+        if (["string", "number"].includes(typeOfSampleId)) {
+            return <'string' | 'number'>typeOfSampleId;
+        }
+
+        throw new Error(`Unexpected type of sample id: ${typeOfSampleId}`);
     }
 
     supportsPagination(): boolean {
