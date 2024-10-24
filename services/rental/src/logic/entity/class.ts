@@ -16,7 +16,7 @@ export class RentalLogic implements EntityLogic<Rental, RentalFilter, RentalId> 
         return this.storage.getOne(id);
     }
 
-    async getMany(filter: Rental): Promise<Rental[]> {
+    async getMany(filter: RentalFilter): Promise<Rental[]> {
         this.validateFilter(filter);
 
         return this.storage.getMany(filter);
