@@ -33,7 +33,7 @@ export class GatewayServer extends Server {
             .get('/api/v1/cars', this.getCars.bind(this))
             .get('/api/v1/rental', this.getRentals.bind(this))
             .get('/api/v1/rental/:id', this.getRental.bind(this))
-            .post('/api/v1/rental', this.postRental.bind(this))
+            .post('/api/v1/rental', this.startRental.bind(this))
             .post('/api/v1/rental/:id/finish', this.finishRental.bind(this))
             .delete('/api/v1/rental/:id', this.cancelRental.bind(this));
     }
@@ -51,7 +51,58 @@ export class GatewayServer extends Server {
         });
     }
 
-    protected async postRental(req: Request, res: Response): Promise<void> {
+    protected getRentals(req: Request, res: Response): void {
+        const username = <string | undefined>req.headers['x-user-name'];
+
+        if (username == null || username.length === 0) {
+            res.status(401).send({error: 'Authentication failure'});
+            return;
+        }
+
+        this.rentalsClient.getMany({username}).then(async (rentals) => {
+            await Promise.all(
+                rentals.map((rental) => this.tryDereferenceRentalUids(rental))
+            ).then(
+                res.send.bind(res)
+            );
+        }).catch((err) => {
+            res.status(500).send({error: 'Rental service failure'});
+            console.error(err);
+        });
+    }
+
+    protected async getRental(req: Request, res: Response): Promise<void> {
+        const username = <string | undefined>req.headers['x-user-name'];
+
+        if (username == null || username.length === 0) {
+            res.status(401).send({error: 'Authentication failure'});
+            return;
+        }
+
+        let parsedId: Rental['rentalUid'];
+
+        try {
+            parsedId = this.parseId(req.params.id);
+        } catch (err) {
+            res.status(400).send({error: 'Bad ID'});
+            console.error(err);
+            return;
+        }
+
+        this.rentalsClient.getOne(parsedId).then(async (rental) => {
+            if (rental == null || rental.username !== username) {
+                res.status(404).send({error: 'No such rental'});
+                return;
+            }
+
+            await this.tryDereferenceRentalUids(rental).then(res.send.bind(res));
+        }).catch((err) => {
+            res.status(500).send({error: 'Rental service failure'});
+            console.error(err);
+        });
+    }
+
+    protected async startRental(req: Request, res: Response): Promise<void> {
         const username = <string | undefined>req.headers['x-user-name'];
 
         if (username == null || username.length === 0) {
@@ -161,57 +212,6 @@ export class GatewayServer extends Server {
             dateFrom: rental.dateFrom.toISOString().split('T')[0],
             dateTo: rental.dateTo.toISOString().split('T')[0],
             payment: payment
-        });
-    }
-
-    protected getRentals(req: Request, res: Response): void {
-        const username = <string | undefined>req.headers['x-user-name'];
-
-        if (username == null || username.length === 0) {
-            res.status(401).send({error: 'Authentication failure'});
-            return;
-        }
-
-        this.rentalsClient.getMany({username}).then(async (rentals) => {
-            await Promise.all(
-                rentals.map((rental) => this.tryDereferenceRentalUids(rental))
-            ).then(
-                res.send.bind(res)
-            );
-        }).catch((err) => {
-            res.status(500).send({error: 'Rental service failure'});
-            console.error(err);
-        });
-    }
-
-    protected async getRental(req: Request, res: Response): Promise<void> {
-        const username = <string | undefined>req.headers['x-user-name'];
-
-        if (username == null || username.length === 0) {
-            res.status(401).send({error: 'Authentication failure'});
-            return;
-        }
-
-        let parsedId: Rental['rentalUid'];
-
-        try {
-            parsedId = this.parseId(req.params.id);
-        } catch (err) {
-            res.status(400).send({error: 'Bad ID'});
-            console.error(err);
-            return;
-        }
-
-        this.rentalsClient.getOne(parsedId).then(async (rental) => {
-            if (rental == null || rental.username !== username) {
-                res.status(404).send({error: 'No such rental'});
-                return;
-            }
-
-            await this.tryDereferenceRentalUids(rental).then(res.send.bind(res));
-        }).catch((err) => {
-            res.status(500).send({error: 'Rental service failure'});
-            console.error(err);
         });
     }
 
