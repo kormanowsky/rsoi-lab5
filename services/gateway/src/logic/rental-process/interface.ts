@@ -1,24 +1,39 @@
-import { Car, RentalFilter } from "@rsoi-lab2/library";
+import { Car, CarId, RentalFilter, RentalId } from "@rsoi-lab2/library";
 
 import { RetrievedRentalWithPayment } from "../rental-retrieval";
 
-export interface RentalProcessStartRequest {
-    carUid: Exclude<Car['carUid'], undefined>;
-    dateFrom: Date;
-    dateTo: Date;
-    username: RentalFilter['username'];
-};
-
-export interface RentalProcessStartSuccessResponse {
+export interface RentalProcessSuccessResponse {
     error: false;
-    rental: RetrievedRentalWithPayment;
 }
 
-export interface RentalProcessStartErrorResponse {
+export interface RentalProcessErrorResponse {
     error: true;
     code: number;
     message: string;
 }
 
-export type RentalProcessStartResponse = RentalProcessStartErrorResponse | 
-    RentalProcessStartSuccessResponse;
+export interface RentalProcessStartRequest {
+    carUid: CarId;
+    dateFrom: Date;
+    dateTo: Date;
+    username: RentalFilter['username'];
+};
+
+export interface RentalProcessStartSuccessResponse extends RentalProcessSuccessResponse {
+    error: false;
+    rental: RetrievedRentalWithPayment;
+}
+
+export type RentalProcessStartResponse = RentalProcessStartSuccessResponse | 
+    RentalProcessErrorResponse;
+
+export interface RentalProcessCancelRequest {
+    rentalUid: RentalId;
+    username: RentalFilter['username'];
+}
+
+export type RentalProcessCancelResponse = RentalProcessSuccessResponse | RentalProcessErrorResponse;
+
+export type RentalProcessFinishRequest = RentalProcessCancelRequest;
+
+export type RentalProcessFinishResponse = RentalProcessSuccessResponse | RentalProcessErrorResponse;

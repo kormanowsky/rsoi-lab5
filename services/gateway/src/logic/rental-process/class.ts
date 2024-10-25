@@ -1,4 +1,4 @@
-import { RentalProcessStartRequest, RentalProcessStartResponse } from "./interface";
+import { RentalProcessCancelRequest, RentalProcessCancelResponse, RentalProcessFinishRequest, RentalProcessFinishResponse, RentalProcessStartRequest, RentalProcessStartResponse } from "./interface";
 import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId, Rental, RentalFilter, RentalId } from "@rsoi-lab2/library";
 import { RentalDereferenceUidsLogic, RetrievedRental, RetrievedRentalWithOptionalEntitiesAndUids, RetrievedRentalWithPayment } from "../rental-retrieval";
 
@@ -100,7 +100,58 @@ export class RentalProcessLogic {
         }
     }
 
-    
+    async cancelRental(request: RentalProcessCancelRequest): Promise<RentalProcessCancelResponse> {
+        let rental: Required<Rental> | null;
+
+        try {
+            rental = await this.rentalsLogic.getOne(request.rentalUid);
+        } catch (err) {
+            console.log(err);
+            return {error: true, code: 500, message: 'Rental service failure'};
+        }
+
+        if (rental == null || rental.username !== request.username) {
+            return {error: true, code: 404, message: 'No such rental'};
+        }
+
+        try {
+            await this.carsLogic.update(rental.carUid, {available: true});
+            await this.rentalsLogic.update(rental.rentalUid, {status: 'CANCELED'});
+            await this.paymentsLogic.update(rental.paymentUid, {status: 'CANCELED'});
+
+        } catch (err) {
+            console.log(err);
+            return {error: true, code: 500, message: 'Transaction failure'};
+        }
+
+        return {error: false};
+    }
+
+    async finishRental(request: RentalProcessFinishRequest): Promise<RentalProcessFinishResponse> {
+        let rental: Required<Rental> | null;
+
+        try {
+            rental = await this.rentalsLogic.getOne(request.rentalUid);
+        } catch (err) {
+            console.log(err);
+            return {error: true, code: 500, message: 'Rental service failure'};
+        }
+
+        if (rental == null || rental.username !== request.username) {
+            return {error: true, code: 404, message: 'No such rental'};
+        }
+
+        try {
+            await this.carsLogic.update(rental.carUid, {available: true});
+            await this.rentalsLogic.update(rental.rentalUid, {status: 'FINISHED'});
+
+        } catch (err) {
+            console.log(err);
+            return {error: true, code: 500, message: 'Transaction failure'};
+        }
+
+        return {error: false};
+    }
 
     private carsLogic: EntityLogic<Car, CarFilter, CarId>;
     private paymentsLogic: EntityLogic<Payment, PaymentFilter, PaymentId>;

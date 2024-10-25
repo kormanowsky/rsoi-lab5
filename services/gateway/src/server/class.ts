@@ -13,16 +13,12 @@ export class GatewayServer extends Server {
         carsLogic: EntityLogic<Car, CarFilter, CarId>, 
         rentalRetrievalLogic: RentalRetrievalLogic,
         rentalProcessLogic: RentalProcessLogic,
-        paymentsClient: PaymentsClient,
-        rentalsClient: RentalsClient,
         port: number
     ) {
         super(port);
         this.carsLogic = carsLogic;
         this.rentalRetrievalLogic = rentalRetrievalLogic;
         this.rentalProcessLogic = rentalProcessLogic;
-        this.paymentsClient = paymentsClient;
-        this.rentalsClient = rentalsClient;
     }
 
     protected initRoutes(): void {
@@ -48,10 +44,13 @@ export class GatewayServer extends Server {
     }
 
     protected getRentals(req: Request, res: Response): void {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
@@ -66,17 +65,20 @@ export class GatewayServer extends Server {
     }
 
     protected async getRental(req: Request, res: Response): Promise<void> {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
-        let parsedId: Rental['rentalUid'];
+        let rentalUid: Rental['rentalUid'];
 
         try {
-            parsedId = this.parseId(req.params.id);
+            rentalUid = this.parseId(req.params.id);
         } catch (err) {
             res.status(400).send({error: 'Bad ID'});
             console.error(err);
@@ -85,7 +87,7 @@ export class GatewayServer extends Server {
 
         try {
 
-            const {rental} = await this.rentalRetrievalLogic.retrieveRental({rentalUid: parsedId, username});
+            const {rental} = await this.rentalRetrievalLogic.retrieveRental({rentalUid, username});
 
             if (rental == null) {
                 res.status(404).send({error: 'No such rental'});
@@ -101,10 +103,13 @@ export class GatewayServer extends Server {
     }
 
     protected async startRental(req: Request, res: Response): Promise<void> {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
@@ -131,72 +136,77 @@ export class GatewayServer extends Server {
     }
 
     protected async finishRental(req: Request, res: Response): Promise<void> {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
-        let parsedId: Rental['rentalUid'];
+        let rentalUid: Rental['rentalUid'];
 
         try {
-            parsedId = this.parseId(req.params.id);
+            rentalUid = this.parseId(req.params.id);
         } catch (err) {
             res.status(400).send({error: 'Bad ID'});
             console.error(err);
             return;
         }
 
-        this.rentalsClient.getOne(parsedId).then(async (rental) => {
-            if (rental == null || rental.username !== username) {
-                res.status(404).send({error: 'No such rental'});
-                return;
-            }
-
-            await this.carsLogic.update(rental.carUid, {available: true});
-            await this.rentalsClient.update(rental.rentalUid, {status: 'FINISHED'});
-
-            res.status(204).send();
-        }).catch((err) => {
-            res.status(500).send({error: 'Internal failure'});
-            console.error(err);
+        const response = await this.rentalProcessLogic.finishRental({
+            rentalUid, 
+            username
         });
+
+        if (response.error) {
+            res.status(response.code).send({error: response.message});
+        } else {
+            res.status(204).send();
+        }
     }
 
     protected async cancelRental(req: Request, res: Response): Promise<void> {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
-        let parsedId: Rental['rentalUid'];
+        let rentalUid: Rental['rentalUid'];
 
         try {
-            parsedId = this.parseId(req.params.id);
+            rentalUid = this.parseId(req.params.id);
         } catch (err) {
             res.status(400).send({error: 'Bad ID'});
             console.error(err);
             return;
         }
 
-        this.rentalsClient.getOne(parsedId).then(async (rental) => {
-            if (rental == null || rental.username !== username) {
-                res.status(404).send({error: 'No such rental'});
-                return;
-            }
-
-            await this.carsLogic.update(rental.carUid, {available: true});
-            await this.rentalsClient.update(rental.rentalUid, {status: 'CANCELED'});
-            await this.paymentsClient.update(rental.paymentUid, {status: 'CANCELED'});
-
-            res.status(204).send();
-        }).catch((err) => {
-            res.status(500).send({error: 'Internal failure'});
-            console.error(err);
+        const response = await this.rentalProcessLogic.cancelRental({
+            rentalUid, 
+            username
         });
+
+        if (response.error) {
+            res.status(response.code).send({error: response.message});
+        } else {
+            res.status(204).send();
+        }
+    }
+
+    protected parseUsername(value: unknown): string {
+        if (typeof value !== 'string' || value.length === 0) {
+            throw new Error('Incorrect username');
+        }
+
+        return value;
     }
 
     protected parseId(value: unknown): string {
@@ -237,12 +247,12 @@ export class GatewayServer extends Server {
         return parsedFilter;
     }
 
-    protected parseRentalRequest(data: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {
-        if (typeof data !== 'object' || data == null) {
+    protected parseRentalRequest(value: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {
+        if (typeof value !== 'object' || value == null) {
             throw new Error(`Rental request data must be non-nullish object`);
         }
 
-        const dataAsRecord = <Record<string, string>>data;
+        const dataAsRecord = <Record<string, string>>value;
 
         for(const key of ['carUid', 'dateFrom', 'dateTo']) {
             if (!dataAsRecord.hasOwnProperty(key)) {
@@ -277,6 +287,4 @@ export class GatewayServer extends Server {
     private carsLogic: EntityLogic<Car, CarFilter, CarId>;
     private rentalRetrievalLogic: RentalRetrievalLogic;
     private rentalProcessLogic: RentalProcessLogic;
-    private paymentsClient: PaymentsClient;
-    private rentalsClient: RentalsClient;
 }

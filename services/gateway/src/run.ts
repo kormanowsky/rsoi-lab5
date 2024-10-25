@@ -20,9 +20,7 @@ const
 const server = new GatewayServer(
     carsLogic, 
     rentalRetrievalLogic, 
-    rentalProcessLogic, 
-    paymentsClient, 
-    rentalsClient, 
+    rentalProcessLogic,
     port
 );
 
