@@ -10,13 +10,13 @@ export class RentalLogic implements EntityLogic<Rental, RentalFilter, RentalId> 
         return this.storage.getIdType();
     }
 
-    async getOne(id: RentalId): Promise<Rental | null> {
+    async getOne(id: RentalId): Promise<Required<Rental> | null> {
         this.validateId(id);
 
         return this.storage.getOne(id);
     }
 
-    async getMany(filter: RentalFilter): Promise<Rental[]> {
+    async getMany(filter: RentalFilter): Promise<Array<Required<Rental>>> {
         this.validateFilter(filter);
 
         return this.storage.getMany(filter);
@@ -26,19 +26,19 @@ export class RentalLogic implements EntityLogic<Rental, RentalFilter, RentalId> 
         return this.storage.supportsPagination();
     }
 
-    async getPaginatedMany(filter: RentalFilter & EntityPaginationFilter): Promise<EntityPaginationData<Rental>> {
+    async getPaginatedMany(filter: RentalFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Rental>>> {
         this.validateFilter(filter);
 
         return this.storage.getPaginatedMany(filter);
     }
 
-    async create(entity: Rental): Promise<Rental> {
+    async create(entity: Rental): Promise<Required<Rental>> {
         this.validateEntity(entity);
 
         return this.storage.create(entity);
     }
 
-    async update(id: RentalId, update: Partial<Rental>): Promise<Rental> {
+    async update(id: RentalId, update: Partial<Rental>): Promise<Required<Rental>> {
         this.validateId(id);
         this.validatePartialEntity(update);
 

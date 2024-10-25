@@ -12,21 +12,21 @@ export interface EntityPaginationData<TEnt> {
 
 export type EntityPaginationResponse<TEnt> = EntityPaginationData<TEnt>;
 
-export interface EntityCRUD<TEnt, TEntFilter, TId extends string | number = string> {
-    getOne(id: TId): Promise<TEnt | null>; 
-    create(entity: TEnt): Promise<TEnt>;
-    update(id: TId, update: Partial<TEnt>): Promise<TEnt>; 
+export interface EntityCRUD<TEnt, TId extends string | number = string> {
+    getOne(id: TId): Promise<Required<TEnt> | null>; 
+    create(entity: TEnt): Promise<Required<TEnt>>;
+    update(id: TId, update: Partial<TEnt>): Promise<Required<TEnt>>; 
     delete(id: TId): Promise<boolean>;
 }
 
 export interface EntityFilter<TEnt, TEntFilter> {
-    getMany(filter: TEntFilter): Promise<TEnt[]>;
+    getMany(filter: TEntFilter): Promise<Array<Required<TEnt>>>;
 }
 
 export interface EntityPaginator<TEnt, TEntFilter> {
     // Пагинация как плагин
     supportsPagination(): boolean;
-    getPaginatedMany(filter: TEntFilter & EntityPaginationFilter): Promise<EntityPaginationData<TEnt>>;
+    getPaginatedMany(filter: TEntFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<TEnt>>>;
 }
 
 export interface EntityValidator<TEnt, TEntFilter, TId extends string | number = string> {
@@ -43,7 +43,7 @@ export interface EntityIdTypeSwitch {
 }
 
 export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = string>
-    extends EntityCRUD<TEnt, TEntFilter, TId>, 
+    extends EntityCRUD<TEnt, TId>, 
         EntityPaginator<TEnt, TEntFilter>,
         EntityFilter<TEnt, TEntFilter>,
         EntityValidator<TEnt, TEntFilter, TId>,
@@ -52,7 +52,7 @@ export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = str
 }
 
 export interface EntityStorage<TEnt, TEntFilter, TId extends string | number = string>
-    extends EntityCRUD<TEnt, TEntFilter, TId>, 
+    extends EntityCRUD<TEnt, TId>, 
         EntityFilter<TEnt, TEntFilter>,
         EntityPaginator<TEnt, TEntFilter>,
         EntityIdTypeSwitch {

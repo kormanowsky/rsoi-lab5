@@ -3,8 +3,8 @@ import {
     EntityClient, EntityLogic, EntityPaginationData, EntityPaginationFilter 
 } from '@rsoi-lab2/library';
 
-export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
-    constructor(client: EntityClient<Car, CarFilter, CarId, true>) {
+export class CarsLogic implements EntityLogic<Required<Car>, CarFilter, CarId> {
+    constructor(client: EntityClient<Required<Car>, CarFilter, CarId, true>) {
         this.client = client;
     }
 
@@ -12,25 +12,25 @@ export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
         return 'string';
     }
 
-    getOne(id: CarId): Promise<Car | null> {
+    getOne(id: CarId): Promise<Required<Car> | null> {
         this.validateId(id);
 
         return this.client.getOne(id);
     }
 
-    getMany(_: CarFilter): Promise<Car[]> {
+    getMany(_: CarFilter): Promise<Array<Required<Car>>> {
         throw new Error('CarsLogic does not support non-paginated getMany(), use getPaginatedMany() instead');
     }
 
-    getPaginatedMany(filter: CarFilter & EntityPaginationFilter): Promise<EntityPaginationData<Car>> {
+    getPaginatedMany(filter: CarFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Car>>> {
         return this.client.getMany(filter);
     }
 
-    create(entity: Car): Promise<Car> {
+    create(entity: Required<Car>): Promise<Required<Car>> {
         return this.client.create(entity);
     }
 
-    update(id: CarId, update: Partial<Car>): Promise<Car> {
+    update(id: CarId, update: Partial<Car>): Promise<Required<Car>> {
         this.validateId(id);
 
         return this.client.update(id, update);
@@ -92,5 +92,5 @@ export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
         }
     }
 
-    private client: EntityClient<Car, CarFilter, CarId, true>;
+    private client: EntityClient<Required<Car>, CarFilter, CarId, true>;
 }

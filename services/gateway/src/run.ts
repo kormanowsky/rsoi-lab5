@@ -1,5 +1,5 @@
 import { CarsClient, PaymentsClient, RentalsClient } from "./client";
-import { CarsLogic } from "./logic";
+import { CarsLogic, PaymentsLogic, RentalsLogic, RentalRetrievalLogic } from "./logic";
 import { GatewayServer } from "./server";
 
 const 
@@ -11,6 +11,9 @@ const
     paymentsClient = new PaymentsClient(paymentApiUrl),
     rentalsClient = new RentalsClient(rentalApiUrl),
     carsLogic = new CarsLogic(carsClient),
-    server = new GatewayServer(carsLogic, paymentsClient, rentalsClient, port);
+    paymentsLogic = new PaymentsLogic(paymentsClient),
+    rentalsLogic = new RentalsLogic(rentalsClient),
+    rentalRetrievalLogic = new RentalRetrievalLogic(carsLogic, paymentsLogic, rentalsLogic),
+    server = new GatewayServer(carsLogic, rentalRetrievalLogic, paymentsClient, rentalsClient, port);
 
 server.start();

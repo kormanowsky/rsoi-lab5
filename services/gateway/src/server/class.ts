@@ -1,29 +1,24 @@
 import { Request, Response } from 'express';
 import { Server, Car, Rental, Payment, EntityLogic, CarFilter, CarId } from '@rsoi-lab2/library';
 import { PaymentsClient, RentalsClient } from '../client';
+import { RentalRetrievalLogic, RetrievedRental } from '../logic';
 
-type RentalResponseBase = Omit<Partial<Rental>, 'dateFrom' | 'dateTo'> & {
+type RentalResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
     dateFrom: string;
     dateTo: string;
-};
-
-type RentalResponseWithCar = Omit<RentalResponseBase, 'carUid'> & {car: Required<Car>};
-type RentalResponseWithPayment = Omit<RentalResponseBase, 'payment'> & {payment: Required<Payment>};
-type RentalResponseFull = Omit<RentalResponseBase, 'car' | 'payment'> & 
-    Pick<RentalResponseWithCar, 'car'> &
-    Pick<RentalResponseWithPayment, 'payment'>;
-
-type RentalResponse = RentalResponseWithCar | RentalResponseWithPayment | RentalResponseFull;
+}
 
 export class GatewayServer extends Server {
     constructor(
         carsLogic: EntityLogic<Car, CarFilter, CarId>, 
+        rentalRetrievalLogic: RentalRetrievalLogic,
         paymentsClient: PaymentsClient,
         rentalsClient: RentalsClient,
         port: number
     ) {
         super(port);
         this.carsLogic = carsLogic;
+        this.rentalRetrievalLogic = rentalRetrievalLogic;
         this.paymentsClient = paymentsClient;
         this.rentalsClient = rentalsClient;
     }
@@ -58,16 +53,14 @@ export class GatewayServer extends Server {
             return;
         }
 
-        this.rentalsClient.getMany({username}).then(async (rentals) => {
-            await Promise.all(
-                rentals.map((rental) => this.tryDereferenceRentalUids(rental))
-            ).then(
-                res.send.bind(res)
-            );
-        }).catch((err) => {
-            res.status(500).send({error: 'Rental service failure'});
-            console.error(err);
-        });
+        this.rentalRetrievalLogic
+            .retrieveRentals({username})
+            .then((rentals) => rentals.map(this.dumpRental.bind(this)))
+            .then(res.send.bind(res))
+            .catch((err) => {
+                res.status(500).send({error: 'Rental retrieval failure'});
+                console.error(err);
+            });
     }
 
     protected async getRental(req: Request, res: Response): Promise<void> {
@@ -88,17 +81,21 @@ export class GatewayServer extends Server {
             return;
         }
 
-        this.rentalsClient.getOne(parsedId).then(async (rental) => {
-            if (rental == null || rental.username !== username) {
+        try {
+
+            const rental = await this.rentalRetrievalLogic.retrieveRental(parsedId, {username});
+
+            if (rental == null) {
                 res.status(404).send({error: 'No such rental'});
                 return;
             }
 
-            await this.tryDereferenceRentalUids(rental).then(res.send.bind(res));
-        }).catch((err) => {
+            res.send(this.dumpRental(rental));
+
+        } catch (err) {
             res.status(500).send({error: 'Rental service failure'});
             console.error(err);
-        });
+        }
     }
 
     protected async startRental(req: Request, res: Response): Promise<void> {
@@ -350,41 +347,16 @@ export class GatewayServer extends Server {
         return {carUid, dateFrom, dateTo};
     }
 
-    protected async tryDereferenceRentalUids(rental: Required<Rental>): Promise<RentalResponse> {
-        let response = <RentalResponseBase>{
+    protected dumpRental(rental: RetrievedRental): RentalResponse {
+        return {
             ...rental,
             dateFrom: rental.dateFrom.toISOString().split('T')[0],
             dateTo: rental.dateTo.toISOString().split('T')[0]
         };
-
-        try {
-            const payment = await this.paymentsClient.getOne(rental.paymentUid);
-
-            if (payment != null) {
-                response = <RentalResponseWithPayment>{...response, payment};
-                delete response.paymentUid;
-            }
-        } catch (err) {
-            console.warn('Payment service failed');
-            console.warn(err);
-        }
-
-        try {
-            const car = await this.carsLogic.getOne(rental.carUid);
-
-            if (car != null) {
-                response = <RentalResponseWithCar>{...response, car};
-                delete response.carUid;
-            }
-        } catch (err) {
-            console.warn('Cars service failed');
-            console.warn(err);
-        }
-
-        return <RentalResponse>response;
     }
 
     private carsLogic: EntityLogic<Car, CarFilter, CarId>;
+    private rentalRetrievalLogic: RentalRetrievalLogic;
     private paymentsClient: PaymentsClient;
     private rentalsClient: RentalsClient;
 }

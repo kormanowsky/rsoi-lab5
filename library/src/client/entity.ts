@@ -1,4 +1,4 @@
-import { EntityCRUD, EntityPaginationData, EntityPaginationResponse } from "../logic";
+import { EntityCRUD, EntityPaginationData } from "../logic";
 
 export class EntityClient<
     TEnt, 
@@ -6,7 +6,7 @@ export class EntityClient<
     TId extends string | number = string, 
     TPaginationEnabled extends boolean = false
 > 
-    implements EntityCRUD<TEnt, TEntFilter, TId>
+    implements EntityCRUD<TEnt, TId>
 {
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
@@ -28,7 +28,7 @@ export class EntityClient<
     async getMany(filter: TEntFilter, opts?: RequestInit): 
         Promise<
             TPaginationEnabled extends true ? 
-            EntityPaginationData<TEnt> :  
+            EntityPaginationData<Required<TEnt>> :  
             Array<Required<TEnt>>
         > 
     {
