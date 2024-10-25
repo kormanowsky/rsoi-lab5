@@ -126,50 +126,31 @@ export class RentalProcessLogic {
         const chain = new TransactionChain<{payment?: Required<Payment>; rental?: Required<Rental>}>(
             new Transaction({
                 do: async (state) => {
-                    state.payment = await this.paymentsLogic.create({
-                        status: 'PAID',
-                        price: request.price
-                    });
-
+                    state.payment = await this.paymentsLogic.create({status: 'PAID', price: request.price});
                     return state;
                 }, 
-                undo: async (state) => {
-                    if (state?.payment != null) {
-                        await this.paymentsLogic.delete(state.payment.paymentUid);
-                    }
-                }
+                undo: async (state) => {await this.paymentsLogic.delete(state!.payment!.paymentUid);}
             }), 
 
             new Transaction({
                 do: async (state) => {
-                    if (state.payment == null) {
-                        throw new Error('No payment in state');
-                    }
-
                     state.rental = await this.rentalsLogic.create({
                         ...request,
-                        paymentUid: state.payment.paymentUid,
+                        paymentUid: state.payment!.paymentUid,
                         status: 'IN_PROGRESS'
                     });
 
                     return state;
                 }, 
-                undo: async (state) => {
-                    if (state?.rental != null) {
-                        await this.rentalsLogic.delete(state.rental.rentalUid);
-                    }
-                }
+                undo: async (state) => {await this.rentalsLogic.delete(state!.rental!.rentalUid);}
             }), 
 
             new Transaction({
                 do: async (_) => {
                     await this.carsLogic.update(request.carUid, {available: false});
-
                     return _;
                 }, 
-                undo: async () => {
-                    await this.carsLogic.update(request.carUid, {available: true});
-                }
+                undo: async () => {await this.carsLogic.update(request.carUid, {available: true});}
             })
         );
 
