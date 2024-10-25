@@ -2,7 +2,7 @@ name: GitHub Classroom Workflow
 on:
   push:
     branches:
-      - dev-gateway-refactor
+      - dev-gateway-tests
   pull_request:
     branches:
       - master
