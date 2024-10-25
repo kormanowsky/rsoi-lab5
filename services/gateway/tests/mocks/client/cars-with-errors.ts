@@ -1,5 +1,5 @@
-import { Car, CarFilter, CarId, EntityPaginationData } from "@rsoi-lab2/library";
-import { MockCarsClient } from "./cars";
+import { Car, CarFilter, CarId, EntityPaginationData } from '@rsoi-lab2/library';
+import { MockCarsClient } from './cars';
 
 export class MockCarsWithErrorsClient extends MockCarsClient {
     getOne(_: CarId): Promise<Required<Car> | null> {
@@ -22,7 +22,7 @@ export class MockCarsWithErrorsClient extends MockCarsClient {
         throw new Error('errored');
     }
 
-    getIdType(): "string" | "number" {
+    getIdType(): 'string' | 'number' {
         return 'string';
     }
 }

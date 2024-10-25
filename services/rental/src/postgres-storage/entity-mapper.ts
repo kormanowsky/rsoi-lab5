@@ -1,5 +1,5 @@
-import { PostgresEntityMapper, EntityPaginationFilter, EntityPaginationData } from "@rsoi-lab2/library";
-import { Rental, RentalFilter, RentalId } from "../logic";
+import { PostgresEntityMapper, EntityPaginationFilter, EntityPaginationData } from '@rsoi-lab2/library';
+import { Rental, RentalFilter, RentalId } from '../logic';
 
 export class PostgresRentalMapper extends PostgresEntityMapper<Rental, RentalFilter, RentalId> {
     constructor(tableName: string) {

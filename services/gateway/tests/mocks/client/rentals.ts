@@ -2,7 +2,7 @@ import {
     Rental, RentalFilter, RentalId, 
     EntityPaginationFilter, EntityPaginationData, 
     EntityClient
-} from "@rsoi-lab2/library";
+} from '@rsoi-lab2/library';
 
 export class MockRentalsClient extends EntityClient<Rental, RentalFilter, RentalId> {
     constructor(initialData: Array<Required<Rental>> = []) {
@@ -32,8 +32,8 @@ export class MockRentalsClient extends EntityClient<Rental, RentalFilter, Rental
         return false;
     }
 
-    getIdType(): "string" | "number" {
-        return "string";
+    getIdType(): 'string' | 'number' {
+        return 'string';
     }
 
     async create(entity: Rental): Promise<Required<Rental>> {

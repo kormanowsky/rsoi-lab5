@@ -1,6 +1,6 @@
 import { 
     Car, CarFilter, CarId, 
-    EntityStorage, EntityPaginationFilter, EntityPaginationData } from "@rsoi-lab2/library";
+    EntityStorage, EntityPaginationFilter, EntityPaginationData } from '@rsoi-lab2/library';
 
 export class MockCarsStorage implements EntityStorage<Car, CarFilter, CarId> {
     constructor(initialData: Array<Required<Car>> = []) {
@@ -40,8 +40,8 @@ export class MockCarsStorage implements EntityStorage<Car, CarFilter, CarId> {
         return true;
     }
 
-    getIdType(): "string" | "number" {
-        return "string";
+    getIdType(): 'string' | 'number' {
+        return 'string';
     }
 
     async create(entity: Car): Promise<Required<Car>> {

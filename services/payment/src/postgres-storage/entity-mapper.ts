@@ -1,5 +1,5 @@
-import { PostgresEntityMapper, EntityPaginationFilter, EntityPaginationData } from "@rsoi-lab2/library";
-import { Payment, PaymentFilter, PaymentId } from "../logic";
+import { PostgresEntityMapper, EntityPaginationFilter, EntityPaginationData } from '@rsoi-lab2/library';
+import { Payment, PaymentFilter, PaymentId } from '../logic';
 
 export class PostgresPaymentMapper extends PostgresEntityMapper<Payment, PaymentFilter, PaymentId> {
     constructor(tableName: string) {

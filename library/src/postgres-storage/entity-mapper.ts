@@ -1,4 +1,4 @@
-import { EntityPaginationData, EntityPaginationFilter } from "../logic";
+import { EntityPaginationData, EntityPaginationFilter } from '../logic';
 
 export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string | number = string> {
     constructor(tableName: string, idColumnName: string, sampleId: TId) {

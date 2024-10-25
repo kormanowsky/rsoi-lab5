@@ -1,6 +1,6 @@
-import { PaymentsLogic } from "../src/logic";
-import { MockPaymentsClient } from "./mocks/client";
-import { mockPayment } from "./mocks/const";
+import { PaymentsLogic } from '../src/logic';
+import { MockPaymentsClient } from './mocks/client';
+import { mockPayment } from './mocks/const';
 
 describe('PaymentsLogic', () => {
     let logic: PaymentsLogic; 

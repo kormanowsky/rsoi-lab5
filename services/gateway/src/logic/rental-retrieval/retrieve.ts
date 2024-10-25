@@ -1,13 +1,13 @@
-import { EntityLogic, Rental, RentalFilter, RentalId } from "@rsoi-lab2/library";
+import { EntityLogic, Rental, RentalFilter, RentalId } from '@rsoi-lab2/library';
 
 import { 
     RentalRetrieveAllRequest,
     RentalRetrieveAllResponse,
     RentalRetrieveSingleRequest,
     RentalRetrieveSingleResponse 
-} from "./interface";
+} from './interface';
 
-import { RentalDereferenceUidsLogic } from "./dereference";
+import { RentalDereferenceUidsLogic } from './dereference';
 
 export class RentalRetrievalLogic {
     constructor(

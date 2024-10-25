@@ -1,6 +1,6 @@
-import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId, Rental, RentalFilter, RentalId, Transaction, TransactionChain, TransactionCommitOutput } from "@rsoi-lab2/library";
-import { RentalDereferenceUidsLogic } from "../rental-retrieval";
-import { RentalProcessCalculateRequest, RentalProcessCalculateResponse, RentalProcessCancelRequest, RentalProcessCancelResponse, RentalProcessFinishRequest, RentalProcessFinishResponse, RentalProcessStartRequest, RentalProcessStartRequestWithPrice, RentalProcessStartResponse } from "./interface";
+import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId, Rental, RentalFilter, RentalId, Transaction, TransactionChain, TransactionCommitOutput } from '@rsoi-lab2/library';
+import { RentalDereferenceUidsLogic } from '../rental-retrieval';
+import { RentalProcessCalculateRequest, RentalProcessCalculateResponse, RentalProcessCancelRequest, RentalProcessCancelResponse, RentalProcessFinishRequest, RentalProcessFinishResponse, RentalProcessStartRequest, RentalProcessStartRequestWithPrice, RentalProcessStartResponse } from './interface';
 
 
 export class RentalProcessLogic {

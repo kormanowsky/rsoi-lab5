@@ -1,6 +1,6 @@
-import { PaymentsLogic } from "./logic";
-import { PostgresPaymentMapper, PostgresPaymentsStorage } from "./postgres-storage";
-import { PaymentServer } from "./server";
+import { PaymentsLogic } from './logic';
+import { PostgresPaymentMapper, PostgresPaymentsStorage } from './postgres-storage';
+import { PaymentServer } from './server';
 
 const 
     port = parseInt(process.env.PORT ?? '8000', 10),

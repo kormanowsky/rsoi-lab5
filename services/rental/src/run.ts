@@ -1,6 +1,6 @@
-import { RentalLogic } from "./logic";
-import { PostgresRentalMapper, PostgresRentalStorage } from "./postgres-storage";
-import { RentalServer } from "./server";
+import { RentalLogic } from './logic';
+import { PostgresRentalMapper, PostgresRentalStorage } from './postgres-storage';
+import { RentalServer } from './server';
 
 const 
     port = parseInt(process.env.PORT ?? '8000', 10),

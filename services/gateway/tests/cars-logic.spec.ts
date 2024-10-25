@@ -1,6 +1,6 @@
-import { CarsLogic } from "../src/logic";
-import { MockCarsClient } from "./mocks/client";
-import { mockCar } from "./mocks/const";
+import { CarsLogic } from '../src/logic';
+import { MockCarsClient } from './mocks/client';
+import { mockCar } from './mocks/const';
 
 describe('CarsLogic', () => {
     let logic: CarsLogic; 

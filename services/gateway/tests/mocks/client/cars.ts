@@ -3,7 +3,7 @@ import {
     EntityPaginationFilter, 
     EntityPaginationData, 
     EntityClient
-} from "@rsoi-lab2/library";
+} from '@rsoi-lab2/library';
 
 export class MockCarsClient extends EntityClient<Car, CarFilter, CarId, true> {
     constructor(initialData: Array<Required<Car>> = []) {
@@ -41,8 +41,8 @@ export class MockCarsClient extends EntityClient<Car, CarFilter, CarId, true> {
         return true;
     }
 
-    getIdType(): "string" | "number" {
-        return "string";
+    getIdType(): 'string' | 'number' {
+        return 'string';
     }
 
     async create(entity: Car): Promise<Required<Car>> {

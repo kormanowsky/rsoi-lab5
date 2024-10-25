@@ -1,7 +1,7 @@
 import { 
     Payment, PaymentFilter, PaymentId, 
     EntityStorage, EntityPaginationFilter, EntityPaginationData 
-} from "@rsoi-lab2/library";
+} from '@rsoi-lab2/library';
 
 export class MockPaymentsStorage implements EntityStorage<Payment, PaymentFilter, PaymentId> {
     constructor(initialData: Array<Required<Payment>> = []) {
@@ -28,8 +28,8 @@ export class MockPaymentsStorage implements EntityStorage<Payment, PaymentFilter
         return false;
     }
 
-    getIdType(): "string" | "number" {
-        return "string";
+    getIdType(): 'string' | 'number' {
+        return 'string';
     }
 
     async create(entity: Payment): Promise<Required<Payment>> {

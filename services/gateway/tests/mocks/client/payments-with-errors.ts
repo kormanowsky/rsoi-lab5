@@ -1,5 +1,5 @@
-import { Payment, PaymentFilter, PaymentId } from "@rsoi-lab2/library";
-import { MockPaymentsClient } from "./payments";
+import { Payment, PaymentFilter, PaymentId } from '@rsoi-lab2/library';
+import { MockPaymentsClient } from './payments';
 
 export class MockPaymentsWithErrorsClient extends MockPaymentsClient {
     getOne(_: PaymentId): Promise<Required<Payment> | null> {
@@ -22,7 +22,7 @@ export class MockPaymentsWithErrorsClient extends MockPaymentsClient {
         throw new Error('errored');
     }
 
-    getIdType(): "string" | "number" {
+    getIdType(): 'string' | 'number' {
         return 'string';
     }
 }

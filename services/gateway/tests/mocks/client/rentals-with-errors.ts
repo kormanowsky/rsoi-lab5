@@ -1,5 +1,5 @@
-import { Rental, RentalFilter, RentalId } from "@rsoi-lab2/library";
-import { MockRentalsClient } from "./rentals";
+import { Rental, RentalFilter, RentalId } from '@rsoi-lab2/library';
+import { MockRentalsClient } from './rentals';
 
 export class MockRentalsWithErrorsClient extends MockRentalsClient {
     getOne(_: RentalId): Promise<Required<Rental> | null> {
@@ -22,7 +22,7 @@ export class MockRentalsWithErrorsClient extends MockRentalsClient {
         throw new Error('errored');
     }
 
-    getIdType(): "string" | "number" {
+    getIdType(): 'string' | 'number' {
         return 'string';
     }
 }

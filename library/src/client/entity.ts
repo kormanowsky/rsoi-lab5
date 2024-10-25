@@ -1,4 +1,4 @@
-import { EntityCRUD, EntityPaginationData } from "../logic";
+import { EntityCRUD, EntityPaginationData } from '../logic';
 
 export class EntityClient<
     TEnt, 

@@ -1,6 +1,6 @@
-import { RentalsLogic } from "../src/logic";
-import { MockRentalsClient } from "./mocks/client";
-import { mockRental } from "./mocks/const";
+import { RentalsLogic } from '../src/logic';
+import { MockRentalsClient } from './mocks/client';
+import { mockRental } from './mocks/const';
 
 describe('RentalsLogic', () => {
     let logic: RentalsLogic; 

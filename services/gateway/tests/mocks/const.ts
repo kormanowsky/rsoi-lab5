@@ -1,4 +1,4 @@
-import { Car, Payment, Rental } from "@rsoi-lab2/library";
+import { Car, Payment, Rental } from '@rsoi-lab2/library';
 
 export const mockCar: Required<Car> = {
     id: 1,

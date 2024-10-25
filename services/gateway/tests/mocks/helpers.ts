@@ -7,7 +7,7 @@ import {
     MockCarsClient, 
     MockPaymentsClient, 
     MockRentalsClient 
-} from "./client";
+} from './client';
 
 import { mockCar, mockPayment, mockRental } from './const';
 

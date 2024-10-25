@@ -1,7 +1,7 @@
-import { Rental } from "@rsoi-lab2/library";
-import { RentalDereferenceUidsLogic } from "../src/logic";
-import { createRentalDereferenceUidsLogic } from "./mocks/helpers";
-import { mockRental } from "./mocks/const";
+import { Rental } from '@rsoi-lab2/library';
+import { RentalDereferenceUidsLogic } from '../src/logic';
+import { createRentalDereferenceUidsLogic } from './mocks/helpers';
+import { mockRental } from './mocks/const';
 
 describe('RentalDereferenceUidsLogic', () => {
     let logic: RentalDereferenceUidsLogic; 

@@ -1,6 +1,6 @@
-import { RentalRetrievalLogic } from "../src/logic";
+import { RentalRetrievalLogic } from '../src/logic';
 import { mockRental } from './mocks/const';
-import { createRentalRetrievalLogic } from "./mocks/helpers";
+import { createRentalRetrievalLogic } from './mocks/helpers';
 
 describe('RentalRetrievalLogic', () => {
     let logic: RentalRetrievalLogic; 

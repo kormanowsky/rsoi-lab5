@@ -1,8 +1,8 @@
 import pg, { QueryResult } from 'pg';
 import pgFormat from 'pg-format';
 
-import { EntityStorage, EntityPaginationData, EntityPaginationFilter } from "../logic";
-import { PostgresEntityMapper } from "./entity-mapper";
+import { EntityStorage, EntityPaginationData, EntityPaginationFilter } from '../logic';
+import { PostgresEntityMapper } from './entity-mapper';
 
 export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number = string> 
     implements EntityStorage<TEnt, TEntFilter, TId> {
@@ -12,10 +12,10 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         this.ready = this.client.connect();
     }
 
-    getIdType(): "string" | "number" {
+    getIdType(): 'string' | 'number' {
         const typeOfSampleId = typeof this.mapper.getSampleId();
 
-        if (["string", "number"].includes(typeOfSampleId)) {
+        if (['string', 'number'].includes(typeOfSampleId)) {
             return <'string' | 'number'>typeOfSampleId;
         }
 

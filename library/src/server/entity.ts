@@ -1,7 +1,7 @@
-import { EntityLogic, EntityPaginationFilter, EntityParser } from "../logic";
+import { EntityLogic, EntityPaginationFilter, EntityParser } from '../logic';
 
-import { Server } from "./abstract";
-import { ServerRequest, ServerResponse } from "./interface";
+import { Server } from './abstract';
+import { ServerRequest, ServerResponse } from './interface';
 
 export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number = number> 
     extends Server
