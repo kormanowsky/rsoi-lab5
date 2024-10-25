@@ -55,7 +55,7 @@ export class GatewayServer extends Server {
 
         this.rentalRetrievalLogic
             .retrieveRentals({username})
-            .then((rentals) => rentals.map(this.dumpRental.bind(this)))
+            .then(({rentals}) => rentals.map(this.dumpRental.bind(this)))
             .then(res.send.bind(res))
             .catch((err) => {
                 res.status(500).send({error: 'Rental retrieval failure'});
@@ -83,7 +83,7 @@ export class GatewayServer extends Server {
 
         try {
 
-            const rental = await this.rentalRetrievalLogic.retrieveRental(parsedId, {username});
+            const {rental} = await this.rentalRetrievalLogic.retrieveRental({rentalUid: parsedId, username});
 
             if (rental == null) {
                 res.status(404).send({error: 'No such rental'});

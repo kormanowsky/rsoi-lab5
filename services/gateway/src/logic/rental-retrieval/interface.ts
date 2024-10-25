@@ -1,4 +1,4 @@
-import { Rental, Car, Payment } from '@rsoi-lab2/library';
+import { Rental, Car, Payment, RentalFilter } from '@rsoi-lab2/library';
 import exp from 'constants';
 
 export type RetrievedRentalWithUids = Required<Rental>;
@@ -16,3 +16,20 @@ export type RetrievedRentalWithOptionalEntitiesAndUids = RetrievedRentalBase & P
     Pick<RetrievedRentalWithUids, 'carUid' | 'paymentUid'> & 
     Pick<RentrievedRentalFull, 'car' | 'payment'>
 >;
+
+export interface RentalRetrieveSingleRequest {
+    rentalUid: Exclude<Rental['rentalUid'], undefined>;
+    username: RentalFilter['username'];
+}
+
+export interface RentalRetrieveSingleResponse {
+    rental: RetrievedRental | null;
+}
+
+export interface RentalRetrieveAllRequest {
+    username: RentalFilter['username'];
+}
+
+export interface RentalRetrieveAllResponse {
+    rentals: RetrievedRental[];
+}

@@ -1,0 +1,14 @@
+import { Car, RentalFilter } from "@rsoi-lab2/library";
+
+import { RetrievedRentalWithPayment } from "../rental-retrieval";
+
+export interface RentalProcessStartRequest {
+    carUid: Exclude<Car['carUid'], undefined>;
+    dateFrom: Date;
+    dateTo: Date;
+    username: RentalFilter['username'];
+};
+
+export interface RetrievalProcessStartResponse {
+    rental: RetrievedRentalWithPayment;
+}
