@@ -15,8 +15,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: docker/setup-buildx-action@v2
-
       - name: Prepare Library For Tests
         run: cd library && npm ci
 
@@ -31,6 +29,8 @@ jobs:
 
       - name: Run Gateway Unit Tests 
         run: cd services/gateway && npm ci && npm run test
+
+      - uses: docker/setup-buildx-action@v2
 
       - name: Build images
         timeout-minutes: 10
