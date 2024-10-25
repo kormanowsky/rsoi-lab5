@@ -19,6 +19,10 @@ export interface RentalProcessStartRequest {
     username: RentalFilter['username'];
 };
 
+export interface RentalProcessStartRequestWithPrice extends RentalProcessStartRequest {
+    price: number;
+}
+
 export interface RentalProcessStartSuccessResponse extends RentalProcessSuccessResponse {
     error: false;
     rental: RetrievedRentalWithPayment;
@@ -37,3 +41,10 @@ export type RentalProcessCancelResponse = RentalProcessSuccessResponse | RentalP
 export type RentalProcessFinishRequest = RentalProcessCancelRequest;
 
 export type RentalProcessFinishResponse = RentalProcessSuccessResponse | RentalProcessErrorResponse;
+
+export type RentalProcessCalculateRequest = RentalProcessStartRequest;
+
+export type RentalProcessCalculateResponse = RentalProcessErrorResponse | {
+    error: false;
+    price: number;
+}

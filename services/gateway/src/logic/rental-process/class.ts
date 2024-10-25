@@ -1,6 +1,7 @@
-import { RentalProcessCancelRequest, RentalProcessCancelResponse, RentalProcessFinishRequest, RentalProcessFinishResponse, RentalProcessStartRequest, RentalProcessStartResponse } from "./interface";
-import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId, Rental, RentalFilter, RentalId } from "@rsoi-lab2/library";
-import { RentalDereferenceUidsLogic, RetrievedRental, RetrievedRentalWithOptionalEntitiesAndUids, RetrievedRentalWithPayment } from "../rental-retrieval";
+import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId, Rental, RentalFilter, RentalId, Transaction, TransactionChain, TransactionCommitOutput } from "@rsoi-lab2/library";
+import { RentalDereferenceUidsLogic } from "../rental-retrieval";
+import { RentalProcessCalculateRequest, RentalProcessCalculateResponse, RentalProcessCancelRequest, RentalProcessCancelResponse, RentalProcessFinishRequest, RentalProcessFinishResponse, RentalProcessStartRequest, RentalProcessStartRequestWithPrice, RentalProcessStartResponse } from "./interface";
+
 
 export class RentalProcessLogic {
     constructor(
@@ -16,7 +17,83 @@ export class RentalProcessLogic {
     }
 
     async startRental(request: RentalProcessStartRequest): Promise<RentalProcessStartResponse> {
-        const rentalDays = (request.dateTo!.getTime() - request.dateFrom!.getTime()) / (1000 * 3600 * 24);
+        let price: number; 
+        
+        try {
+            const response = await this.calculateRentalPrice(request);
+
+            if (response.error) {
+                return response;
+            }
+
+            price = response.price;
+    
+        } catch (err) {
+            return {error: true, code: 500, message: 'Calculation error'};
+        }
+
+        const {error, output} = await this.commitStartRental({...request, price});
+
+        if (error != null || output == null) {
+            return {error: true, code: 500, message: `Transaction error: ${error}`};
+        }
+
+        const {rental, payment} = output;
+
+        return {
+            error: false,
+            rental: await this.rentalDereferenceLogic.tryDereferenceRentalPaymentUid(rental, payment)
+        }
+    }
+
+    async cancelRental(request: RentalProcessCancelRequest): Promise<RentalProcessCancelResponse> {
+        let rental: Required<Rental> | null;
+
+        try {
+            rental = await this.rentalsLogic.getOne(request.rentalUid);
+        } catch (err) {
+            console.log(err);
+            return {error: true, code: 500, message: 'Rental service failure'};
+        }
+
+        if (rental == null || rental.username !== request.username) {
+            return {error: true, code: 404, message: 'No such rental'};
+        }
+
+        const {error} = await this.commitCancelRental(rental);
+
+        if (error != null) {
+            return {error: true, code: 500, message: `Transaction error: ${error}`};
+        }
+
+        return {error: false};
+    }
+
+    async finishRental(request: RentalProcessFinishRequest): Promise<RentalProcessFinishResponse> {
+        let rental: Required<Rental> | null;
+
+        try {
+            rental = await this.rentalsLogic.getOne(request.rentalUid);
+        } catch (err) {
+            console.log(err);
+            return {error: true, code: 500, message: 'Rental service failure'};
+        }
+
+        if (rental == null || rental.username !== request.username) {
+            return {error: true, code: 404, message: 'No such rental'};
+        }
+
+        const {error} = await this.commitFinishRental(rental);
+
+        if (error != null) {
+            return {error: true, code: 500, message: `Transaction error: ${error}`};
+        }
+
+        return {error: false};
+    }
+
+    async calculateRentalPrice(request: RentalProcessCalculateRequest): Promise<RentalProcessCalculateResponse> {
+        const rentalDays = (request.dateTo.getTime() - request.dateFrom.getTime()) / (1000 * 3600 * 24);
 
         if (rentalDays <= 0) {
             return {error: true, code: 400, message: 'Rental may not finish before start'};
@@ -40,117 +117,99 @@ export class RentalProcessLogic {
             return {error: true, code: 403, message: 'Car is not available'};
         }
 
-        const price = car.price * rentalDays;
-
-        let payment: Required<Payment>;
-
-        try {
-            payment = await this.paymentsLogic.create({
-                status: 'PAID',
-                price
-            });
-        } catch (err) {
-            console.error(err);
-            return {error: true, code: 500, message: 'Payment service failure'};
-        }
-
-        let rental: Required<Rental>;
-
-        try {
-            rental = await this.rentalsLogic.create({
-                ...request,
-                paymentUid: payment.paymentUid,
-                status: 'IN_PROGRESS'
-            });
-        } catch (err) {
-            console.error(err);
-
-            try {
-                await this.paymentsLogic.update(payment.paymentUid, {status: 'CANCELED'});
-            } catch (err) {
-                console.error(err);
-            }
-
-            return {error: true, code: 500, message: 'Payment service failure'};
-        }
-
-        try {
-            await this.carsLogic.update(car.carUid, {available: false});
-        } catch (err) {
-            console.error(err);
-
-            try {
-                await this.rentalsLogic.update(rental.rentalUid, {status: 'CANCELED'});
-            } catch (err) {
-                console.error(err);
-            }
-
-            try {
-                await this.paymentsLogic.update(payment.paymentUid, {status: 'CANCELED'});
-            } catch (err) {
-                console.error(err);
-            }
-
-            return {error: true, code: 500, message: 'Cars service failure'};
-        }
-
-        return {
-            error: false,
-            rental: await this.rentalDereferenceLogic.tryDereferenceRentalPaymentUid(rental, payment)
-        }
+        return {error: false, price: car.price * rentalDays};
     }
 
-    async cancelRental(request: RentalProcessCancelRequest): Promise<RentalProcessCancelResponse> {
-        let rental: Required<Rental> | null;
+    protected commitStartRental(request: RentalProcessStartRequestWithPrice): 
+        Promise<TransactionCommitOutput<{payment: Required<Payment>; rental: Required<Rental>}>> {
+            
+        const chain = new TransactionChain<{payment?: Required<Payment>; rental?: Required<Rental>}>(
+            new Transaction({
+                do: async (state) => {
+                    state.payment = await this.paymentsLogic.create({
+                        status: 'PAID',
+                        price: request.price
+                    });
 
-        try {
-            rental = await this.rentalsLogic.getOne(request.rentalUid);
-        } catch (err) {
-            console.log(err);
-            return {error: true, code: 500, message: 'Rental service failure'};
-        }
+                    return state;
+                }, 
+                undo: async (state) => {
+                    if (state?.payment != null) {
+                        await this.paymentsLogic.delete(state.payment.paymentUid);
+                    }
+                }
+            }), 
 
-        if (rental == null || rental.username !== request.username) {
-            return {error: true, code: 404, message: 'No such rental'};
-        }
+            new Transaction({
+                do: async (state) => {
+                    if (state.payment == null) {
+                        throw new Error('No payment in state');
+                    }
 
-        try {
-            await this.carsLogic.update(rental.carUid, {available: true});
-            await this.rentalsLogic.update(rental.rentalUid, {status: 'CANCELED'});
-            await this.paymentsLogic.update(rental.paymentUid, {status: 'CANCELED'});
+                    state.rental = await this.rentalsLogic.create({
+                        ...request,
+                        paymentUid: state.payment.paymentUid,
+                        status: 'IN_PROGRESS'
+                    });
 
-        } catch (err) {
-            console.log(err);
-            return {error: true, code: 500, message: 'Transaction failure'};
-        }
+                    return state;
+                }, 
+                undo: async (state) => {
+                    if (state?.rental != null) {
+                        await this.rentalsLogic.delete(state.rental.rentalUid);
+                    }
+                }
+            }), 
 
-        return {error: false};
+            new Transaction({
+                do: async (_) => {
+                    await this.carsLogic.update(request.carUid, {available: false});
+
+                    return _;
+                }, 
+                undo: async () => {
+                    await this.carsLogic.update(request.carUid, {available: true});
+                }
+            })
+        );
+
+        return chain.commit({}).then(
+            output => <TransactionCommitOutput<{payment: Required<Payment>; rental: Required<Rental>}>>output
+        );
     }
 
-    async finishRental(request: RentalProcessFinishRequest): Promise<RentalProcessFinishResponse> {
-        let rental: Required<Rental> | null;
+    protected commitCancelRental(rental: Required<Rental>): Promise<TransactionCommitOutput<void>> {
+        const chain = new TransactionChain<void>(
+            new Transaction({
+                do: async () => {await this.carsLogic.update(rental.carUid, {available: true})},
+                undo: async () => {await this.carsLogic.update(rental.carUid, {available: false})}
+            }),
+            new Transaction({
+                do: async () => {await this.paymentsLogic.update(rental.paymentUid, {status: 'CANCELED'})},
+                undo: async () => {await this.paymentsLogic.update(rental.paymentUid, {status: 'PAID'})}
+            }),
+            new Transaction({
+                do: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'CANCELED'})},
+                undo: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'IN_PROGRESS'})}
+            }),
+        );
 
-        try {
-            rental = await this.rentalsLogic.getOne(request.rentalUid);
-        } catch (err) {
-            console.log(err);
-            return {error: true, code: 500, message: 'Rental service failure'};
-        }
+        return chain.commit();
+    }
 
-        if (rental == null || rental.username !== request.username) {
-            return {error: true, code: 404, message: 'No such rental'};
-        }
+    protected commitFinishRental(rental: Required<Rental>): Promise<TransactionCommitOutput<void>> {
+        const chain = new TransactionChain<void>(
+            new Transaction({
+                do: async () => {await this.carsLogic.update(rental.carUid, {available: true})},
+                undo: async () => {await this.carsLogic.update(rental.carUid, {available: false})}
+            }),
+            new Transaction({
+                do: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'FINISHED'})},
+                undo: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'IN_PROGRESS'})}
+            }),
+        );
 
-        try {
-            await this.carsLogic.update(rental.carUid, {available: true});
-            await this.rentalsLogic.update(rental.rentalUid, {status: 'FINISHED'});
-
-        } catch (err) {
-            console.log(err);
-            return {error: true, code: 500, message: 'Transaction failure'};
-        }
-
-        return {error: false};
+        return chain.commit();
     }
 
     private carsLogic: EntityLogic<Car, CarFilter, CarId>;

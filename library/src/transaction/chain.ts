@@ -2,12 +2,13 @@ import { TransactionCommitOutput } from "./interface";
 import { Transaction } from "./simple";
 
 export class TransactionChain<
-    TState, 
+    TState = void, 
     TIn extends TState = TState,
     TOut extends TState = TState
 > extends Transaction<TIn, TOut> {
-    constructor(){
+    constructor(...chain: Array<Transaction<TState, TState>>){
         super();
+        this.chain = chain;
         this.state = null;
         this.lastSuccessfulTransaction = -1;
     }
