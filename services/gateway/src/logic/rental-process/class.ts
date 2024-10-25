@@ -22,7 +22,7 @@ export class RentalProcessLogic {
         try {
             const response = await this.calculateRentalPrice(request);
 
-            if (response.error) {
+            if (response.error !== false) {
                 return response;
             }
 

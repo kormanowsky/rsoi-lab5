@@ -128,7 +128,7 @@ export class GatewayServer extends Server {
             username
         });
 
-        if (response.error) {
+        if (response.error === true) {
             res.status(response.code).send({error: response.message});
         } else {
             res.send(this.dumpRental(response.rental));

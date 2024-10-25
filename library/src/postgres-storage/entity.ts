@@ -26,7 +26,7 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         return true;
     }
 
-    async getOne(id: TId): Promise<TEnt | null> {
+    async getOne(id: TId): Promise<Required<TEnt> | null> {
         await this.ready;
 
         const resultRows = await this.executeQuery(...this.mapper.getSelectQueryForId(id));
@@ -38,7 +38,7 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         return this.mapper.getEntityFromRow(resultRows.rows[0]);
     }
 
-    async getMany(filter: TEntFilter): Promise<TEnt[]> {
+    async getMany(filter: TEntFilter): Promise<Array<Required<TEnt>>> {
         await this.ready;
 
         const resultRows = await this.executeQuery(...this.mapper.getSelectQueryForFilter(filter));
@@ -46,7 +46,7 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         return resultRows.rows.map((row) => this.mapper.getEntityFromRow(row));
     }
 
-    async getPaginatedMany(filter: TEntFilter & EntityPaginationFilter): Promise<EntityPaginationData<TEnt>> {
+    async getPaginatedMany(filter: TEntFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<TEnt>>> {
         await this.ready;
 
         const [resultRows, totalResultRows] = await Promise.all([
@@ -57,7 +57,7 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         return this.mapper.getPaginatedEntities(resultRows.rows, filter, totalResultRows.rows[0]);
     }
 
-    async create(entity: TEnt): Promise<TEnt> {
+    async create(entity: TEnt): Promise<Required<TEnt>> {
         await this.ready;
 
         const resultRows = await this.executeQuery(...this.mapper.getInsertQueryForEntity(entity));
@@ -65,7 +65,7 @@ export class PostgresEntityStorage<TEnt, TEntFilter, TId extends string | number
         return this.mapper.getEntityFromRow(resultRows.rows[0]);
     }
 
-    async update(id: TId, update: Partial<TEnt>): Promise<TEnt> {
+    async update(id: TId, update: Partial<TEnt>): Promise<Required<TEnt>> {
         await this.ready;
 
         const resultRows = await this.executeQuery(...this.mapper.getUpdateQueryForEntity({id, update}));
