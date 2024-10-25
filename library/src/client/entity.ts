@@ -1,7 +1,12 @@
-import { EntityCRUD, EntityPaginationResponse } from "../logic";
+import { EntityCRUD, EntityPaginationData, EntityPaginationResponse } from "../logic";
 
-export class EntityClient<TEnt, TEntFilter, TId extends string | number = string> 
-    implements EntityCRUD<TEnt, TEntFilter, TId> 
+export class EntityClient<
+    TEnt, 
+    TEntFilter, 
+    TId extends string | number = string, 
+    TPaginationEnabled extends boolean = false
+> 
+    implements EntityCRUD<TEnt, TEntFilter, TId>
 {
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
@@ -20,7 +25,13 @@ export class EntityClient<TEnt, TEntFilter, TId extends string | number = string
         return null;
     }
 
-    async getMany(filter: TEntFilter, opts?: RequestInit): Promise<Array<Required<TEnt>>> {
+    async getMany(filter: TEntFilter, opts?: RequestInit): 
+        Promise<
+            TPaginationEnabled extends true ? 
+            EntityPaginationData<TEnt> :  
+            Array<Required<TEnt>>
+        > 
+    {
         const queryParams = new URLSearchParams();
 
         for(const [key, value] of Object.entries(<Record<string, any>>filter)) {

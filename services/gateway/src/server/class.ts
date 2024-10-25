@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Server, Car, Rental, Payment } from '@rsoi-lab2/library';
-import { CarsClient, PaymentsClient, RentalsClient } from '../client';
+import { Server, Car, Rental, Payment, EntityLogic, CarFilter, CarId } from '@rsoi-lab2/library';
+import { PaymentsClient, RentalsClient } from '../client';
 
 type RentalResponseBase = Omit<Partial<Rental>, 'dateFrom' | 'dateTo'> & {
     dateFrom: string;
@@ -17,13 +17,13 @@ type RentalResponse = RentalResponseWithCar | RentalResponseWithPayment | Rental
 
 export class GatewayServer extends Server {
     constructor(
-        carsClient: CarsClient, 
+        carsLogic: EntityLogic<Car, CarFilter, CarId>, 
         paymentsClient: PaymentsClient,
         rentalsClient: RentalsClient,
         port: number
     ) {
         super(port);
-        this.carsClient = carsClient;
+        this.carsLogic = carsLogic;
         this.paymentsClient = paymentsClient;
         this.rentalsClient = rentalsClient;
     }
@@ -39,16 +39,15 @@ export class GatewayServer extends Server {
     }
 
     protected getCars(req: Request, res: Response): void {
-        this.carsClient.getMany(
-            {
-                page: parseInt(<string>req.query.page ?? '1', 10),
-                size: parseInt(<string>req.query.size ?? '15', 10),
-                showAll: Boolean(req.query.showAll === 'false' ? '' : req.query.showAll)
-            }
-        ).then((data) => res.send(data)).catch((err) => {
-            res.status(500).send({error: 'Cars service error'});
-            console.error(err);
-        });
+        const parsedFilter = this.parseCarFilter(req.query);
+
+        this.carsLogic
+            .getPaginatedMany(parsedFilter)
+            .then((data) => res.send(data))
+            .catch((err) => {
+                res.status(500).send({error: 'Cars service error'});
+                console.error(err);
+            });
     }
 
     protected getRentals(req: Request, res: Response): void {
@@ -130,7 +129,7 @@ export class GatewayServer extends Server {
         let car: Car | null;
 
         try {
-            car = await this.carsClient.getOne(rentalRequest.carUid!);
+            car = await this.carsLogic.getOne(rentalRequest.carUid!);
         } catch(err) {
             res.status(500).send({error: 'Cars service failure'});
             console.error(err);
@@ -185,7 +184,7 @@ export class GatewayServer extends Server {
         }
 
         try {
-            await this.carsClient.update(car.carUid, {available: false});
+            await this.carsLogic.update(car.carUid, {available: false});
         } catch (err) {
             res.status(500).send({error: 'Cars service failure'});
             console.error(err);
@@ -239,7 +238,7 @@ export class GatewayServer extends Server {
                 return;
             }
 
-            await this.carsClient.update(rental.carUid, {available: true});
+            await this.carsLogic.update(rental.carUid, {available: true});
             await this.rentalsClient.update(rental.rentalUid, {status: 'FINISHED'});
 
             res.status(204).send();
@@ -273,7 +272,7 @@ export class GatewayServer extends Server {
                 return;
             }
 
-            await this.carsClient.update(rental.carUid, {available: true});
+            await this.carsLogic.update(rental.carUid, {available: true});
             await this.rentalsClient.update(rental.rentalUid, {status: 'CANCELED'});
             await this.paymentsClient.update(rental.paymentUid, {status: 'CANCELED'});
 
@@ -290,6 +289,36 @@ export class GatewayServer extends Server {
         }
 
         return value;
+    }
+
+    protected parseCarFilter(value: unknown): CarFilter {
+        if (typeof value !== 'object' || value == null) {
+            throw new Error('Car filter must be a non-nullish object');
+        }
+
+        const parsedFilter = {
+            page: 1,
+            size: 10,
+            showAll: false
+        };
+
+        for(const key of ['page', 'size']) {
+            if (value.hasOwnProperty(key)) {
+                const intValue = parseInt(value[key], 10);
+
+                if (isNaN(intValue)) {
+                    throw new Error(`Invalid key ${key} in car filter, must be an int`);
+                }
+
+                parsedFilter[key] = intValue;
+            }
+        }
+
+        if (value.hasOwnProperty('showAll') && value['showAll'] !== 'false') {
+            parsedFilter.showAll = Boolean(value['showAll']);
+        }
+
+        return parsedFilter;
     }
 
     protected parseRentalRequest(data: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {
@@ -341,7 +370,7 @@ export class GatewayServer extends Server {
         }
 
         try {
-            const car = await this.carsClient.getOne(rental.carUid);
+            const car = await this.carsLogic.getOne(rental.carUid);
 
             if (car != null) {
                 response = <RentalResponseWithCar>{...response, car};
@@ -355,7 +384,7 @@ export class GatewayServer extends Server {
         return <RentalResponse>response;
     }
 
-    private carsClient: CarsClient;
+    private carsLogic: EntityLogic<Car, CarFilter, CarId>;
     private paymentsClient: PaymentsClient;
     private rentalsClient: RentalsClient;
 }

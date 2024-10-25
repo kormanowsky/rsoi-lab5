@@ -14,10 +14,13 @@ export type EntityPaginationResponse<TEnt> = EntityPaginationData<TEnt>;
 
 export interface EntityCRUD<TEnt, TEntFilter, TId extends string | number = string> {
     getOne(id: TId): Promise<TEnt | null>; 
-    getMany(filter: TEntFilter): Promise<TEnt[]>;
     create(entity: TEnt): Promise<TEnt>;
     update(id: TId, update: Partial<TEnt>): Promise<TEnt>; 
     delete(id: TId): Promise<boolean>;
+}
+
+export interface EntityFilter<TEnt, TEntFilter> {
+    getMany(filter: TEntFilter): Promise<TEnt[]>;
 }
 
 export interface EntityPaginator<TEnt, TEntFilter> {
@@ -42,6 +45,7 @@ export interface EntityIdTypeSwitch {
 export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = string>
     extends EntityCRUD<TEnt, TEntFilter, TId>, 
         EntityPaginator<TEnt, TEntFilter>,
+        EntityFilter<TEnt, TEntFilter>,
         EntityValidator<TEnt, TEntFilter, TId>,
         EntityIdTypeSwitch {
     
@@ -49,6 +53,7 @@ export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = str
 
 export interface EntityStorage<TEnt, TEntFilter, TId extends string | number = string>
     extends EntityCRUD<TEnt, TEntFilter, TId>, 
+        EntityFilter<TEnt, TEntFilter>,
         EntityPaginator<TEnt, TEntFilter>,
         EntityIdTypeSwitch {
 }
