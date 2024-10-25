@@ -43,7 +43,7 @@ export class PaymentsLogic implements EntityLogic<Required<Payment>, PaymentFilt
     }
 
     supportsPagination(): boolean {
-        return true;
+        return false;
     }
 
     validateId(value: PaymentId): void {

@@ -43,7 +43,7 @@ export class RentalsLogic implements EntityLogic<Required<Rental>, RentalFilter,
     }
 
     supportsPagination(): boolean {
-        return true;
+        return false;
     }
 
     validateId(value: RentalId): void {
