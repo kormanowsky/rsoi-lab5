@@ -1,31 +1,24 @@
 import { Request, Response } from 'express';
-import { Server, Car, Rental, Payment } from '@rsoi-lab2/library';
-import { CarsClient, PaymentsClient, RentalsClient } from '../client';
+import { Server, Car, Rental, Payment, EntityLogic, CarFilter, CarId } from '@rsoi-lab2/library';
+import { PaymentsClient, RentalsClient } from '../client';
+import { RentalProcessLogic, RentalRetrievalLogic, RetrievedRental } from '../logic';
 
-type RentalResponseBase = Omit<Partial<Rental>, 'dateFrom' | 'dateTo'> & {
+type RentalResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
     dateFrom: string;
     dateTo: string;
-};
-
-type RentalResponseWithCar = Omit<RentalResponseBase, 'carUid'> & {car: Required<Car>};
-type RentalResponseWithPayment = Omit<RentalResponseBase, 'payment'> & {payment: Required<Payment>};
-type RentalResponseFull = Omit<RentalResponseBase, 'car' | 'payment'> & 
-    Pick<RentalResponseWithCar, 'car'> &
-    Pick<RentalResponseWithPayment, 'payment'>;
-
-type RentalResponse = RentalResponseWithCar | RentalResponseWithPayment | RentalResponseFull;
+}
 
 export class GatewayServer extends Server {
     constructor(
-        carsClient: CarsClient, 
-        paymentsClient: PaymentsClient,
-        rentalsClient: RentalsClient,
+        carsLogic: EntityLogic<Car, CarFilter, CarId>, 
+        rentalRetrievalLogic: RentalRetrievalLogic,
+        rentalProcessLogic: RentalProcessLogic,
         port: number
     ) {
         super(port);
-        this.carsClient = carsClient;
-        this.paymentsClient = paymentsClient;
-        this.rentalsClient = rentalsClient;
+        this.carsLogic = carsLogic;
+        this.rentalRetrievalLogic = rentalRetrievalLogic;
+        this.rentalProcessLogic = rentalProcessLogic;
     }
 
     protected initRoutes(): void {
@@ -39,74 +32,84 @@ export class GatewayServer extends Server {
     }
 
     protected getCars(req: Request, res: Response): void {
-        this.carsClient.getMany(
-            {
-                page: parseInt(<string>req.query.page ?? '1', 10),
-                size: parseInt(<string>req.query.size ?? '15', 10),
-                showAll: Boolean(req.query.showAll === 'false' ? '' : req.query.showAll)
-            }
-        ).then((data) => res.send(data)).catch((err) => {
-            res.status(500).send({error: 'Cars service error'});
-            console.error(err);
-        });
+        const parsedFilter = this.parseCarFilter(req.query);
+
+        this.carsLogic
+            .getPaginatedMany(parsedFilter)
+            .then((data) => res.send(data))
+            .catch((err) => {
+                res.status(500).send({error: 'Cars service error'});
+                console.error(err);
+            });
     }
 
     protected getRentals(req: Request, res: Response): void {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
-        this.rentalsClient.getMany({username}).then(async (rentals) => {
-            await Promise.all(
-                rentals.map((rental) => this.tryDereferenceRentalUids(rental))
-            ).then(
-                res.send.bind(res)
-            );
-        }).catch((err) => {
-            res.status(500).send({error: 'Rental service failure'});
-            console.error(err);
-        });
+        this.rentalRetrievalLogic
+            .retrieveRentals({username})
+            .then(({rentals}) => rentals.map(this.dumpRental.bind(this)))
+            .then(res.send.bind(res))
+            .catch((err) => {
+                res.status(500).send({error: 'Rental retrieval failure'});
+                console.error(err);
+            });
     }
 
     protected async getRental(req: Request, res: Response): Promise<void> {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
-        let parsedId: Rental['rentalUid'];
+        let rentalUid: Rental['rentalUid'];
 
         try {
-            parsedId = this.parseId(req.params.id);
+            rentalUid = this.parseId(req.params.id);
         } catch (err) {
             res.status(400).send({error: 'Bad ID'});
             console.error(err);
             return;
         }
 
-        this.rentalsClient.getOne(parsedId).then(async (rental) => {
-            if (rental == null || rental.username !== username) {
+        try {
+
+            const {rental} = await this.rentalRetrievalLogic.retrieveRental({rentalUid, username});
+
+            if (rental == null) {
                 res.status(404).send({error: 'No such rental'});
                 return;
             }
 
-            await this.tryDereferenceRentalUids(rental).then(res.send.bind(res));
-        }).catch((err) => {
+            res.send(this.dumpRental(rental));
+
+        } catch (err) {
             res.status(500).send({error: 'Rental service failure'});
             console.error(err);
-        });
+        }
     }
 
     protected async startRental(req: Request, res: Response): Promise<void> {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
@@ -120,168 +123,90 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const rentalDays = (rentalRequest.dateTo!.getTime() - rentalRequest.dateFrom!.getTime()) / (1000 * 3600 * 24);
-
-        if (rentalDays <= 0) {
-            res.status(400).send({error: 'Rental may not finish before start'});
-            return;
-        }
-
-        let car: Car | null;
-
-        try {
-            car = await this.carsClient.getOne(rentalRequest.carUid!);
-        } catch(err) {
-            res.status(500).send({error: 'Cars service failure'});
-            console.error(err);
-            return;
-        }
-
-        if (car == null) {
-            res.status(400).send({error: 'Bad car id'});
-            return;
-        }
-
-        if (!car.available) {
-            res.status(403).send({error: 'Car is not available'});
-            return;
-        }
-
-        const totalPrice = car.price * rentalDays;
-
-        let payment: Required<Payment>;
-
-        try {
-            payment = await this.paymentsClient.create({
-                status: 'PAID',
-                price: totalPrice
-            });
-        } catch (err) {
-            res.status(500).send({error: 'Payment service failure'});
-            console.error(err);
-            return;
-        }
-
-        let rental: Required<Rental>;
-
-        try {
-            rental = await this.rentalsClient.create({
-                ...rentalRequest,
-                username,
-                paymentUid: payment.paymentUid,
-                status: 'IN_PROGRESS'
-            });
-        } catch (err) {
-            res.status(500).send({error: 'Rental service failure'});
-            console.error(err);
-
-            try {
-                await this.paymentsClient.update(payment.paymentUid, {status: 'CANCELED'});
-            } catch (err) {
-                console.error(err);
-            }
-
-            return;
-        }
-
-        try {
-            await this.carsClient.update(car.carUid, {available: false});
-        } catch (err) {
-            res.status(500).send({error: 'Cars service failure'});
-            console.error(err);
-
-            try {
-                await this.rentalsClient.update(rental.rentalUid, {status: 'CANCELED'});
-            } catch (err) {
-                console.error(err);
-            }
-
-            try {
-                await this.paymentsClient.update(payment.paymentUid, {status: 'CANCELED'});
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        const rentalResponse: Partial<Rental> = {...rental};
-
-        delete rentalResponse.paymentUid;
-
-        res.status(200).send({
-            ...rentalResponse,
-            dateFrom: rental.dateFrom.toISOString().split('T')[0],
-            dateTo: rental.dateTo.toISOString().split('T')[0],
-            payment: payment
+        const response = await this.rentalProcessLogic.startRental({
+            ...rentalRequest, 
+            username
         });
+
+        if (response.error) {
+            res.status(response.code).send({error: response.message});
+        } else {
+            res.send(this.dumpRental(response.rental));
+        }
     }
 
     protected async finishRental(req: Request, res: Response): Promise<void> {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
-        let parsedId: Rental['rentalUid'];
+        let rentalUid: Rental['rentalUid'];
 
         try {
-            parsedId = this.parseId(req.params.id);
+            rentalUid = this.parseId(req.params.id);
         } catch (err) {
             res.status(400).send({error: 'Bad ID'});
             console.error(err);
             return;
         }
 
-        this.rentalsClient.getOne(parsedId).then(async (rental) => {
-            if (rental == null || rental.username !== username) {
-                res.status(404).send({error: 'No such rental'});
-                return;
-            }
-
-            await this.carsClient.update(rental.carUid, {available: true});
-            await this.rentalsClient.update(rental.rentalUid, {status: 'FINISHED'});
-
-            res.status(204).send();
-        }).catch((err) => {
-            res.status(500).send({error: 'Internal failure'});
-            console.error(err);
+        const response = await this.rentalProcessLogic.finishRental({
+            rentalUid, 
+            username
         });
+
+        if (response.error) {
+            res.status(response.code).send({error: response.message});
+        } else {
+            res.status(204).send();
+        }
     }
 
     protected async cancelRental(req: Request, res: Response): Promise<void> {
-        const username = <string | undefined>req.headers['x-user-name'];
+        let username: string;
 
-        if (username == null || username.length === 0) {
+        try {
+            username = this.parseUsername(req.headers['x-user-name']);
+        } catch (err) {
             res.status(401).send({error: 'Authentication failure'});
+            console.log(err);
             return;
         }
 
-        let parsedId: Rental['rentalUid'];
+        let rentalUid: Rental['rentalUid'];
 
         try {
-            parsedId = this.parseId(req.params.id);
+            rentalUid = this.parseId(req.params.id);
         } catch (err) {
             res.status(400).send({error: 'Bad ID'});
             console.error(err);
             return;
         }
 
-        this.rentalsClient.getOne(parsedId).then(async (rental) => {
-            if (rental == null || rental.username !== username) {
-                res.status(404).send({error: 'No such rental'});
-                return;
-            }
-
-            await this.carsClient.update(rental.carUid, {available: true});
-            await this.rentalsClient.update(rental.rentalUid, {status: 'CANCELED'});
-            await this.paymentsClient.update(rental.paymentUid, {status: 'CANCELED'});
-
-            res.status(204).send();
-        }).catch((err) => {
-            res.status(500).send({error: 'Internal failure'});
-            console.error(err);
+        const response = await this.rentalProcessLogic.cancelRental({
+            rentalUid, 
+            username
         });
+
+        if (response.error) {
+            res.status(response.code).send({error: response.message});
+        } else {
+            res.status(204).send();
+        }
+    }
+
+    protected parseUsername(value: unknown): string {
+        if (typeof value !== 'string' || value.length === 0) {
+            throw new Error('Incorrect username');
+        }
+
+        return value;
     }
 
     protected parseId(value: unknown): string {
@@ -292,12 +217,42 @@ export class GatewayServer extends Server {
         return value;
     }
 
-    protected parseRentalRequest(data: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {
-        if (typeof data !== 'object' || data == null) {
+    protected parseCarFilter(value: unknown): CarFilter {
+        if (typeof value !== 'object' || value == null) {
+            throw new Error('Car filter must be a non-nullish object');
+        }
+
+        const parsedFilter = {
+            page: 1,
+            size: 10,
+            showAll: false
+        };
+
+        for(const key of ['page', 'size']) {
+            if (value.hasOwnProperty(key)) {
+                const intValue = parseInt(value[key], 10);
+
+                if (isNaN(intValue)) {
+                    throw new Error(`Invalid key ${key} in car filter, must be an int`);
+                }
+
+                parsedFilter[key] = intValue;
+            }
+        }
+
+        if (value.hasOwnProperty('showAll') && value['showAll'] !== 'false') {
+            parsedFilter.showAll = Boolean(value['showAll']);
+        }
+
+        return parsedFilter;
+    }
+
+    protected parseRentalRequest(value: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {
+        if (typeof value !== 'object' || value == null) {
             throw new Error(`Rental request data must be non-nullish object`);
         }
 
-        const dataAsRecord = <Record<string, string>>data;
+        const dataAsRecord = <Record<string, string>>value;
 
         for(const key of ['carUid', 'dateFrom', 'dateTo']) {
             if (!dataAsRecord.hasOwnProperty(key)) {
@@ -321,41 +276,15 @@ export class GatewayServer extends Server {
         return {carUid, dateFrom, dateTo};
     }
 
-    protected async tryDereferenceRentalUids(rental: Required<Rental>): Promise<RentalResponse> {
-        let response = <RentalResponseBase>{
+    protected dumpRental(rental: RetrievedRental): RentalResponse {
+        return {
             ...rental,
             dateFrom: rental.dateFrom.toISOString().split('T')[0],
             dateTo: rental.dateTo.toISOString().split('T')[0]
         };
-
-        try {
-            const payment = await this.paymentsClient.getOne(rental.paymentUid);
-
-            if (payment != null) {
-                response = <RentalResponseWithPayment>{...response, payment};
-                delete response.paymentUid;
-            }
-        } catch (err) {
-            console.warn('Payment service failed');
-            console.warn(err);
-        }
-
-        try {
-            const car = await this.carsClient.getOne(rental.carUid);
-
-            if (car != null) {
-                response = <RentalResponseWithCar>{...response, car};
-                delete response.carUid;
-            }
-        } catch (err) {
-            console.warn('Cars service failed');
-            console.warn(err);
-        }
-
-        return <RentalResponse>response;
     }
 
-    private carsClient: CarsClient;
-    private paymentsClient: PaymentsClient;
-    private rentalsClient: RentalsClient;
+    private carsLogic: EntityLogic<Car, CarFilter, CarId>;
+    private rentalRetrievalLogic: RentalRetrievalLogic;
+    private rentalProcessLogic: RentalProcessLogic;
 }

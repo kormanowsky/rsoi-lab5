@@ -10,13 +10,13 @@ export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, Paymen
         return this.storage.getIdType();
     }
 
-    async getOne(id: PaymentId): Promise<Payment | null> {
+    async getOne(id: PaymentId): Promise<Required<Payment> | null> {
         this.validateId(id);
 
         return this.storage.getOne(id);
     }
 
-    async getMany(filter: PaymentFilter): Promise<Payment[]> {
+    async getMany(filter: PaymentFilter): Promise<Array<Required<Payment>>> {
         this.validateFilter(filter);
 
         return this.storage.getMany(filter);
@@ -26,19 +26,19 @@ export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, Paymen
         return this.storage.supportsPagination();
     }
 
-    async getPaginatedMany(filter: PaymentFilter & EntityPaginationFilter): Promise<EntityPaginationData<Payment>> {
+    async getPaginatedMany(filter: PaymentFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Payment>>> {
         this.validateFilter(filter);
 
         return this.storage.getPaginatedMany(filter);
     }
 
-    async create(entity: Payment): Promise<Payment> {
+    async create(entity: Payment): Promise<Required<Payment>> {
         this.validateEntity(entity);
 
         return this.storage.create(entity);
     }
 
-    async update(id: PaymentId, update: Partial<Payment>): Promise<Payment> {
+    async update(id: PaymentId, update: Partial<Payment>): Promise<Required<Payment>> {
         this.validateId(id);
         this.validatePartialEntity(update);
 

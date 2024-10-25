@@ -12,17 +12,17 @@ export class MockRentalsStorage implements EntityStorage<Rental, RentalFilter, R
         }
     }
 
-    async getOne(id: RentalId): Promise<Rental | null> {
+    async getOne(id: RentalId): Promise<Required<Rental> | null> {
         return this.storage[id] ?? null;
     }
 
-    async getMany(filter: RentalFilter): Promise<Rental[]> {
+    async getMany(filter: RentalFilter): Promise<Array<Required<Rental>>> {
         return Object.values(this.storage).filter(
-            (rental): rental is Rental => rental != null && rental.username === filter.username
+            (rental): rental is Required<Rental> => rental != null && rental.username === filter.username
         );
     }
 
-    async getPaginatedMany(_: RentalFilter & EntityPaginationFilter): Promise<EntityPaginationData<Rental>> {
+    async getPaginatedMany(_: RentalFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Rental>>> {
         throw new Error('Pagination is not supported on Rentals!');
     }
 
@@ -34,7 +34,7 @@ export class MockRentalsStorage implements EntityStorage<Rental, RentalFilter, R
         return "string";
     }
 
-    async create(entity: Rental): Promise<Rental> {
+    async create(entity: Rental): Promise<Required<Rental>> {
         const preparedEntity = {
             ...entity,
             id: this.id,
@@ -45,7 +45,7 @@ export class MockRentalsStorage implements EntityStorage<Rental, RentalFilter, R
         return preparedEntity;
     }
 
-    async update(id: RentalId, update: Partial<Rental>): Promise<Rental> {
+    async update(id: RentalId, update: Partial<Rental>): Promise<Required<Rental>> {
         if (this.storage.hasOwnProperty(id)) {
             return Object.assign(this.storage[id]!, update);
         }
@@ -58,6 +58,6 @@ export class MockRentalsStorage implements EntityStorage<Rental, RentalFilter, R
         return true;
     }
 
-    private storage: Partial<Record<RentalId, Rental>>;
+    private storage: Partial<Record<RentalId, Required<Rental>>>;
     private id: number = 0;
 }

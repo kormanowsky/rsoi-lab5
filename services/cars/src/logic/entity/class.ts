@@ -10,13 +10,13 @@ export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
         return this.storage.getIdType();
     }
 
-    async getOne(id: CarId): Promise<Car | null> {
+    async getOne(id: CarId): Promise<Required<Car> | null> {
         this.validateId(id);
 
         return this.storage.getOne(id);
     }
 
-    async getMany(filter: CarFilter): Promise<Car[]> {
+    async getMany(filter: CarFilter): Promise<Array<Required<Car>>> {
         this.validateFilter(filter);
 
         return this.storage.getMany(filter);
@@ -26,19 +26,19 @@ export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
         return this.storage.supportsPagination();
     }
 
-    async getPaginatedMany(filter: CarFilter & EntityPaginationFilter): Promise<EntityPaginationData<Car>> {
+    async getPaginatedMany(filter: CarFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Car>>> {
         this.validateFilter(filter);
 
         return this.storage.getPaginatedMany(filter);
     }
 
-    async create(entity: Car): Promise<Car> {
+    async create(entity: Car): Promise<Required<Car>> {
         this.validateEntity(entity);
 
         return this.storage.create(entity);
     }
 
-    async update(id: CarId, update: Partial<Car>): Promise<Car> {
+    async update(id: CarId, update: Partial<Car>): Promise<Required<Car>> {
         this.validateId(id);
         this.validatePartialEntity(update);
 

@@ -1,6 +1,6 @@
 import { Car } from "@rsoi-lab2/library";
 
-export const mockCar: Car = {
+export const mockCar: Required<Car> = {
     id: 1,
     carUid: 'test-uid',
     model: 'test model',

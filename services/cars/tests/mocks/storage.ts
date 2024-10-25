@@ -3,7 +3,7 @@ import {
     EntityStorage, EntityPaginationFilter, EntityPaginationData } from "@rsoi-lab2/library";
 
 export class MockCarsStorage implements EntityStorage<Car, CarFilter, CarId> {
-    constructor(initialData: Car[] = []) {
+    constructor(initialData: Array<Required<Car>> = []) {
         this.storage = {};
 
         for(const car of initialData) {
@@ -11,17 +11,17 @@ export class MockCarsStorage implements EntityStorage<Car, CarFilter, CarId> {
         }
     }
 
-    async getOne(id: CarId): Promise<Car | null> {
+    async getOne(id: CarId): Promise<Required<Car> | null> {
         return this.storage[id] ?? null;
     }
 
-    async getMany(filter: CarFilter): Promise<Car[]> {
+    async getMany(filter: CarFilter): Promise<Array<Required<Car>>> {
         return Object.values(this.storage).filter(
-            (car?: Car): car is Car => car != null && (car.available || filter.showAll)
+            (car?: Required<Car>): car is Required<Car> => car != null && (car.available || filter.showAll)
         );
     }
 
-    async getPaginatedMany(filter: CarFilter & EntityPaginationFilter): Promise<EntityPaginationData<Car>> {
+    async getPaginatedMany(filter: CarFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Car>>> {
         const filtered = await this.getMany(filter);
 
         const 
@@ -44,7 +44,7 @@ export class MockCarsStorage implements EntityStorage<Car, CarFilter, CarId> {
         return "string";
     }
 
-    async create(entity: Car): Promise<Car> {
+    async create(entity: Car): Promise<Required<Car>> {
         const preparedEntity = {
             ...entity,
             id: this.id,
@@ -55,7 +55,7 @@ export class MockCarsStorage implements EntityStorage<Car, CarFilter, CarId> {
         return preparedEntity;
     }
 
-    async update(id: CarId, update: Partial<Car>): Promise<Car> {
+    async update(id: CarId, update: Partial<Car>): Promise<Required<Car>> {
         if (this.storage.hasOwnProperty(id)) {
             return Object.assign(this.storage[id]!, update);
         }
@@ -68,6 +68,6 @@ export class MockCarsStorage implements EntityStorage<Car, CarFilter, CarId> {
         return true;
     }
 
-    private storage: Partial<Record<CarId, Car>>;
+    private storage: Partial<Record<CarId, Required<Car>>>;
     private id: number = 0;
 }
