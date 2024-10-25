@@ -12,15 +12,15 @@ export class MockPaymentsStorage implements EntityStorage<Payment, PaymentFilter
         }
     }
 
-    async getOne(id: PaymentId): Promise<Payment | null> {
+    async getOne(id: PaymentId): Promise<Required<Payment> | null> {
         return this.storage[id] ?? null;
     }
 
-    async getMany(_: PaymentFilter): Promise<Payment[]> {
-        return Object.values(this.storage).filter((payment): payment is Payment => payment != null);
+    async getMany(_: PaymentFilter): Promise<Array<Required<Payment>>> {
+        return Object.values(this.storage).filter((payment): payment is Required<Payment> => payment != null);
     }
 
-    async getPaginatedMany(_: PaymentFilter & EntityPaginationFilter): Promise<EntityPaginationData<Payment>> {
+    async getPaginatedMany(_: PaymentFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Payment>>> {
         throw new Error('Pagination is not supported on payments!');
     }
 
@@ -32,7 +32,7 @@ export class MockPaymentsStorage implements EntityStorage<Payment, PaymentFilter
         return "string";
     }
 
-    async create(entity: Payment): Promise<Payment> {
+    async create(entity: Payment): Promise<Required<Payment>> {
         const preparedEntity = {
             ...entity,
             id: this.id,
@@ -43,7 +43,7 @@ export class MockPaymentsStorage implements EntityStorage<Payment, PaymentFilter
         return preparedEntity;
     }
 
-    async update(id: PaymentId, update: Partial<Payment>): Promise<Payment> {
+    async update(id: PaymentId, update: Partial<Payment>): Promise<Required<Payment>> {
         if (this.storage.hasOwnProperty(id)) {
             return Object.assign(this.storage[id]!, update);
         }
@@ -56,6 +56,6 @@ export class MockPaymentsStorage implements EntityStorage<Payment, PaymentFilter
         return true;
     }
 
-    private storage: Partial<Record<PaymentId, Payment>>;
+    private storage: Partial<Record<PaymentId, Required<Payment>>>;
     private id: number = 0;
 }
