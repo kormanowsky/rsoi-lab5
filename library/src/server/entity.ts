@@ -1,8 +1,7 @@
-import { Request, Response } from "express";
-
 import { EntityLogic, EntityPaginationFilter, EntityParser } from "../logic";
 
 import { Server } from "./abstract";
+import { ServerRequest, ServerResponse } from "./interface";
 
 export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number = number> 
     extends Server
@@ -35,7 +34,7 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
             .delete(this.delete.bind(this));
     }
 
-    protected getOne(req: Request, res: Response): void {
+    protected getOne(req: ServerRequest, res: ServerResponse): void {
         let idParsed: TId;
 
         try {
@@ -53,7 +52,7 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
         });
     }
 
-    protected getMany(req: Request, res: Response): void {
+    protected getMany(req: ServerRequest, res: ServerResponse): void {
         let parsedFilter: TEntFilter;
 
         try {
@@ -70,7 +69,7 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
         });
     }
 
-    protected getPaginatedMany(req: Request, res: Response): void {
+    protected getPaginatedMany(req: ServerRequest, res: ServerResponse): void {
         let parsedFilter: TEntFilter & EntityPaginationFilter;
 
         try {
@@ -87,7 +86,7 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
         });
     }
 
-    protected create(req: Request, res: Response): void {
+    protected create(req: ServerRequest, res: ServerResponse): void {
         let parsedEntity: TEnt;
 
         try {
@@ -104,7 +103,7 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
         });
     }
 
-    protected update(req: Request, res: Response): void {
+    protected update(req: ServerRequest, res: ServerResponse): void {
         let 
             idParsed: TId,
             parsedUpdate: Partial<TEnt>;
@@ -135,7 +134,7 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
         });
     }
 
-    protected delete(req: Request, res: Response): void {
+    protected delete(req: ServerRequest, res: ServerResponse): void {
         let idParsed: TId;
 
         try {

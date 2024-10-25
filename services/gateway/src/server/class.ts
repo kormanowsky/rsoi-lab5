@@ -1,9 +1,7 @@
-import { Request, Response } from 'express';
-import { Server, Car, Rental, Payment, EntityLogic, CarFilter, CarId } from '@rsoi-lab2/library';
-import { PaymentsClient, RentalsClient } from '../client';
+import { Server, ServerRequest, ServerResponse, Car, Rental, EntityLogic, CarFilter, CarId } from '@rsoi-lab2/library';
 import { RentalProcessLogic, RentalRetrievalLogic, RetrievedRental } from '../logic';
 
-type RentalResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
+type RentalServerResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
     dateFrom: string;
     dateTo: string;
 }
@@ -31,7 +29,7 @@ export class GatewayServer extends Server {
             .delete('/api/v1/rental/:id', this.cancelRental.bind(this));
     }
 
-    protected getCars(req: Request, res: Response): void {
+    protected getCars(req: ServerRequest, res: ServerResponse): void {
         const parsedFilter = this.parseCarFilter(req.query);
 
         this.carsLogic
@@ -43,7 +41,7 @@ export class GatewayServer extends Server {
             });
     }
 
-    protected getRentals(req: Request, res: Response): void {
+    protected getRentals(req: ServerRequest, res: ServerResponse): void {
         let username: string;
 
         try {
@@ -64,7 +62,7 @@ export class GatewayServer extends Server {
             });
     }
 
-    protected async getRental(req: Request, res: Response): Promise<void> {
+    protected async getRental(req: ServerRequest, res: ServerResponse): Promise<void> {
         let username: string;
 
         try {
@@ -102,7 +100,7 @@ export class GatewayServer extends Server {
         }
     }
 
-    protected async startRental(req: Request, res: Response): Promise<void> {
+    protected async startRental(req: ServerRequest, res: ServerResponse): Promise<void> {
         let username: string;
 
         try {
@@ -113,10 +111,10 @@ export class GatewayServer extends Server {
             return;
         }
 
-        let rentalRequest: Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'>;
+        let rentalServerRequest: Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'>;
 
         try {
-            rentalRequest = this.parseRentalRequest(req.body);
+            rentalServerRequest = this.parseRentalServerRequest(req.body);
         } catch (err) {
             res.status(400).send({error: 'Bad request'});
             console.error(err);
@@ -124,7 +122,7 @@ export class GatewayServer extends Server {
         }
 
         const response = await this.rentalProcessLogic.startRental({
-            ...rentalRequest, 
+            ...rentalServerRequest, 
             username
         });
 
@@ -135,7 +133,7 @@ export class GatewayServer extends Server {
         }
     }
 
-    protected async finishRental(req: Request, res: Response): Promise<void> {
+    protected async finishRental(req: ServerRequest, res: ServerResponse): Promise<void> {
         let username: string;
 
         try {
@@ -168,7 +166,7 @@ export class GatewayServer extends Server {
         }
     }
 
-    protected async cancelRental(req: Request, res: Response): Promise<void> {
+    protected async cancelRental(req: ServerRequest, res: ServerResponse): Promise<void> {
         let username: string;
 
         try {
@@ -247,7 +245,7 @@ export class GatewayServer extends Server {
         return parsedFilter;
     }
 
-    protected parseRentalRequest(value: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {
+    protected parseRentalServerRequest(value: unknown): Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'> {
         if (typeof value !== 'object' || value == null) {
             throw new Error(`Rental request data must be non-nullish object`);
         }
@@ -276,7 +274,7 @@ export class GatewayServer extends Server {
         return {carUid, dateFrom, dateTo};
     }
 
-    protected dumpRental(rental: RetrievedRental): RentalResponse {
+    protected dumpRental(rental: RetrievedRental): RentalServerResponse {
         return {
             ...rental,
             dateFrom: rental.dateFrom.toISOString().split('T')[0],
