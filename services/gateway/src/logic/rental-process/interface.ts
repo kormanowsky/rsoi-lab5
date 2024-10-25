@@ -9,6 +9,16 @@ export interface RentalProcessStartRequest {
     username: RentalFilter['username'];
 };
 
-export interface RetrievalProcessStartResponse {
+export interface RentalProcessStartSuccessResponse {
+    error: false;
     rental: RetrievedRentalWithPayment;
 }
+
+export interface RentalProcessStartErrorResponse {
+    error: true;
+    code: number;
+    message: string;
+}
+
+export type RentalProcessStartResponse = RentalProcessStartErrorResponse | 
+    RentalProcessStartSuccessResponse;

@@ -18,20 +18,29 @@ export class RentalDereferenceUidsLogic {
         this.paymentLogic = paymentLogic;
     }
 
-    async tryDereferenceRentalCarUid(rental: RetrievedRentalWithUids): Promise<
-        RetrievedRentalWithUids | RetrievedRentalWithCar
-    >
-    async tryDereferenceRentalCarUid(rental: RetrievedRentalWithPayment): Promise<
-        RetrievedRentalWithPayment | RentrievedRentalFull
-    >
+    async tryDereferenceRentalCarUid(rental: RetrievedRentalWithUids): 
+        Promise<RetrievedRentalWithUids | RetrievedRentalWithCar>
+    async tryDereferenceRentalCarUid(rental: RetrievedRentalWithPayment): 
+        Promise<RetrievedRentalWithPayment | RentrievedRentalFull>
     async tryDereferenceRentalCarUid(rental: RetrievedRentalWithUids | RetrievedRentalWithPayment): 
         Promise<RetrievedRental>
-    async tryDereferenceRentalCarUid(rental: RetrievedRentalWithUids | RetrievedRentalWithPayment): 
-        Promise<RetrievedRental> {
+    async tryDereferenceRentalCarUid(rental: RetrievedRentalWithUids, car: Required<Car>): 
+        Promise<RetrievedRentalWithCar>
+    async tryDereferenceRentalCarUid(rental: RetrievedRentalWithPayment, car: Required<Car>): 
+        Promise<RentrievedRentalFull>
+    async tryDereferenceRentalCarUid(
+        rental: RetrievedRentalWithUids | RetrievedRentalWithPayment, car: Required<Car>
+    ): Promise<RetrievedRental>
+    async tryDereferenceRentalCarUid(
+        rental: RetrievedRentalWithUids | RetrievedRentalWithPayment, 
+        car: Required<Car> | null = null
+    ): Promise<RetrievedRental> {
         const rentalCopy: RetrievedRentalWithOptionalEntitiesAndUids = {...rental};
         
         try {
-            const car = await this.carsLogic.getOne(rental.carUid);
+            if (car == null) {
+                car = await this.carsLogic.getOne(rental.carUid);
+            }
 
             if (car != null) {
                 delete rentalCopy.carUid;
@@ -46,20 +55,30 @@ export class RentalDereferenceUidsLogic {
         return rental;
     }
 
-    async tryDereferenceRentalPaymentUid(rental: RetrievedRentalWithUids): Promise<
-        RetrievedRentalWithUids | RetrievedRentalWithPayment
-    >
-    async tryDereferenceRentalPaymentUid(rental: RetrievedRentalWithCar): Promise<
-        RetrievedRentalWithCar | RentrievedRentalFull
-    >
+    async tryDereferenceRentalPaymentUid(rental: RetrievedRentalWithUids): 
+        Promise<RetrievedRentalWithUids | RetrievedRentalWithPayment>
+    async tryDereferenceRentalPaymentUid(rental: RetrievedRentalWithCar): 
+        Promise<RetrievedRentalWithCar | RentrievedRentalFull>
     async tryDereferenceRentalPaymentUid(rental: RetrievedRentalWithUids | RetrievedRentalWithCar): 
         Promise<RetrievedRental>
-    async tryDereferenceRentalPaymentUid(rental: RetrievedRentalWithUids | RetrievedRentalWithCar): 
-        Promise<RetrievedRental> {
+    async tryDereferenceRentalPaymentUid(rental: RetrievedRentalWithUids, payment: Required<Payment>): 
+        Promise<RetrievedRentalWithPayment>
+    async tryDereferenceRentalPaymentUid(rental: RetrievedRentalWithCar, payment: Required<Payment>): 
+        Promise<RentrievedRentalFull>
+    async tryDereferenceRentalPaymentUid(
+        rental: RetrievedRentalWithUids | RetrievedRentalWithCar, payment: Required<Payment>
+    ): 
+        Promise<RetrievedRental>
+    async tryDereferenceRentalPaymentUid(
+        rental: RetrievedRentalWithUids | RetrievedRentalWithCar, 
+        payment: Required<Payment> | null = null
+    ): Promise<RetrievedRental> {
         const rentalCopy: RetrievedRentalWithOptionalEntitiesAndUids = {...rental};
         
         try {
-            const payment = await this.paymentLogic.getOne(rental.paymentUid);
+            if (payment == null) {
+                payment = await this.paymentLogic.getOne(rental.paymentUid);
+            }
 
             if (payment != null) {
                 delete rentalCopy.paymentUid;

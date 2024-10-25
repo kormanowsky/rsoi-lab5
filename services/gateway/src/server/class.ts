@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Server, Car, Rental, Payment, EntityLogic, CarFilter, CarId } from '@rsoi-lab2/library';
 import { PaymentsClient, RentalsClient } from '../client';
-import { RentalRetrievalLogic, RetrievedRental } from '../logic';
+import { RentalProcessLogic, RentalRetrievalLogic, RetrievedRental } from '../logic';
 
 type RentalResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
     dateFrom: string;
@@ -12,6 +12,7 @@ export class GatewayServer extends Server {
     constructor(
         carsLogic: EntityLogic<Car, CarFilter, CarId>, 
         rentalRetrievalLogic: RentalRetrievalLogic,
+        rentalProcessLogic: RentalProcessLogic,
         paymentsClient: PaymentsClient,
         rentalsClient: RentalsClient,
         port: number
@@ -19,6 +20,7 @@ export class GatewayServer extends Server {
         super(port);
         this.carsLogic = carsLogic;
         this.rentalRetrievalLogic = rentalRetrievalLogic;
+        this.rentalProcessLogic = rentalProcessLogic;
         this.paymentsClient = paymentsClient;
         this.rentalsClient = rentalsClient;
     }
@@ -116,99 +118,16 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const rentalDays = (rentalRequest.dateTo!.getTime() - rentalRequest.dateFrom!.getTime()) / (1000 * 3600 * 24);
-
-        if (rentalDays <= 0) {
-            res.status(400).send({error: 'Rental may not finish before start'});
-            return;
-        }
-
-        let car: Car | null;
-
-        try {
-            car = await this.carsLogic.getOne(rentalRequest.carUid!);
-        } catch(err) {
-            res.status(500).send({error: 'Cars service failure'});
-            console.error(err);
-            return;
-        }
-
-        if (car == null) {
-            res.status(400).send({error: 'Bad car id'});
-            return;
-        }
-
-        if (!car.available) {
-            res.status(403).send({error: 'Car is not available'});
-            return;
-        }
-
-        const totalPrice = car.price * rentalDays;
-
-        let payment: Required<Payment>;
-
-        try {
-            payment = await this.paymentsClient.create({
-                status: 'PAID',
-                price: totalPrice
-            });
-        } catch (err) {
-            res.status(500).send({error: 'Payment service failure'});
-            console.error(err);
-            return;
-        }
-
-        let rental: Required<Rental>;
-
-        try {
-            rental = await this.rentalsClient.create({
-                ...rentalRequest,
-                username,
-                paymentUid: payment.paymentUid,
-                status: 'IN_PROGRESS'
-            });
-        } catch (err) {
-            res.status(500).send({error: 'Rental service failure'});
-            console.error(err);
-
-            try {
-                await this.paymentsClient.update(payment.paymentUid, {status: 'CANCELED'});
-            } catch (err) {
-                console.error(err);
-            }
-
-            return;
-        }
-
-        try {
-            await this.carsLogic.update(car.carUid, {available: false});
-        } catch (err) {
-            res.status(500).send({error: 'Cars service failure'});
-            console.error(err);
-
-            try {
-                await this.rentalsClient.update(rental.rentalUid, {status: 'CANCELED'});
-            } catch (err) {
-                console.error(err);
-            }
-
-            try {
-                await this.paymentsClient.update(payment.paymentUid, {status: 'CANCELED'});
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        const rentalResponse: Partial<Rental> = {...rental};
-
-        delete rentalResponse.paymentUid;
-
-        res.status(200).send({
-            ...rentalResponse,
-            dateFrom: rental.dateFrom.toISOString().split('T')[0],
-            dateTo: rental.dateTo.toISOString().split('T')[0],
-            payment: payment
+        const response = await this.rentalProcessLogic.startRental({
+            ...rentalRequest, 
+            username
         });
+
+        if (response.error) {
+            res.status(response.code).send({error: response.message});
+        } else {
+            res.send(this.dumpRental(response.rental));
+        }
     }
 
     protected async finishRental(req: Request, res: Response): Promise<void> {
@@ -357,6 +276,7 @@ export class GatewayServer extends Server {
 
     private carsLogic: EntityLogic<Car, CarFilter, CarId>;
     private rentalRetrievalLogic: RentalRetrievalLogic;
+    private rentalProcessLogic: RentalProcessLogic;
     private paymentsClient: PaymentsClient;
     private rentalsClient: RentalsClient;
 }
