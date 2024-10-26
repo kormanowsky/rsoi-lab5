@@ -1,5 +1,4 @@
 import { Rental, Car, Payment, RentalFilter } from '@rsoi-lab2/library';
-import exp from 'constants';
 
 export type RetrievedRentalWithUids = Required<Rental>;
 export type RetrievedRentalBase = Omit<RetrievedRentalWithUids, 'carUid' | 'paymentUid'>;

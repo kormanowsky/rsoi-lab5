@@ -1,4 +1,4 @@
-import { EntityPaginationData, EntityPaginationFilter } from "../logic";
+import { EntityPaginationData, EntityPaginationFilter } from '../logic';
 
 export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string | number = string> {
     constructor(tableName: string, idColumnName: string, sampleId: TId) {
@@ -110,7 +110,7 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
         entityRows: Array<Record<string, unknown>>, 
         filter: EntityPaginationFilter, 
         totalCountRow: Record<string, unknown>
-    ): EntityPaginationData<TEnt> {
+    ): EntityPaginationData<Required<TEnt>> {
         return {
             items: entityRows.map((row) => this.getEntityFromRow(row)),
             totalElements: parseInt(<string>(totalCountRow.total_count ?? '0'), 10),
@@ -119,8 +119,8 @@ export abstract class PostgresEntityMapper<TEnt, TEntFilter, TId extends string 
         };
     }
 
-    getEntityFromRow(row: Record<string, unknown>): TEnt {
-        return <TEnt>Object.entries<[string | true, string]>(
+    getEntityFromRow(row: Record<string, unknown>): Required<TEnt> {
+        return <Required<TEnt>>Object.entries<[string | true, string]>(
             this.getEntityPropsToColumnsMap()
         ).reduce<Partial<TEnt>>((acc, [key, [rowKey]]) => {
             const realRowKey = rowKey === true ? key : rowKey;

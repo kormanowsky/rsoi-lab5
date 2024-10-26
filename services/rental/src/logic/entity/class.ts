@@ -1,12 +1,12 @@
-import { EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage } from "@rsoi-lab2/library";
-import { Rental, RentalFilter, RentalId } from "./interface";
+import { EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage } from '@rsoi-lab2/library';
+import { Rental, RentalFilter, RentalId } from './interface';
 
 export class RentalLogic implements EntityLogic<Rental, RentalFilter, RentalId> {
     constructor(storage: EntityStorage<Rental, RentalFilter, RentalId>) {
         this.storage = storage;
     }
 
-    getIdType(): "string" | "number" {
+    getIdType(): 'string' | 'number' {
         return this.storage.getIdType();
     }
 

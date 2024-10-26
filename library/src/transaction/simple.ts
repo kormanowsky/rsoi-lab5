@@ -1,4 +1,4 @@
-import { TransactionCommitOutput, TransactionInit } from "./interface";
+import { TransactionCommitOutput, TransactionInit } from './interface';
 
 export class Transaction<TIn, TOut> {
     constructor(init?: TransactionInit<TIn, TOut>) {

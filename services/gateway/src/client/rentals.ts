@@ -1,4 +1,4 @@
-import { EntityClient, Rental, RentalFilter, RentalId } from "@rsoi-lab2/library";
+import { EntityClient, Rental, RentalFilter, RentalId } from '@rsoi-lab2/library';
 
 export class RentalsClient extends EntityClient<Rental, RentalFilter, RentalId>{
     getOne(id: string, opts?: RequestInit): Promise<Required<Rental> | null> {

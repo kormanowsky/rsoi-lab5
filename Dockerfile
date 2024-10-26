@@ -16,6 +16,7 @@ WORKDIR /apps/${SERVICE}
 
 COPY services/${SERVICE}/src/ ./src
 COPY services/${SERVICE}/package*.json .
+COPY services/${SERVICE}/tsconfig.json .
 
 RUN npm install
 

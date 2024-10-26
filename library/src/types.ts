@@ -1,4 +1,4 @@
-import { EntityPaginationFilter } from "./logic";
+import { EntityPaginationFilter } from './logic';
 
 export interface Car {
     id?: number;

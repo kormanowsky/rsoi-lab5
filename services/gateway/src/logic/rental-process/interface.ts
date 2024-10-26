@@ -1,6 +1,6 @@
-import { Car, CarId, RentalFilter, RentalId } from "@rsoi-lab2/library";
+import { Car, CarId, RentalFilter, RentalId } from '@rsoi-lab2/library';
 
-import { RetrievedRentalWithPayment } from "../rental-retrieval";
+import { RetrievedRentalWithPayment } from '../rental-retrieval';
 
 export interface RentalProcessSuccessResponse {
     error: false;

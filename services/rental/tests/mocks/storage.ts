@@ -1,7 +1,7 @@
 import { 
     Rental, RentalFilter, RentalId, 
     EntityStorage, EntityPaginationFilter, EntityPaginationData 
-} from "@rsoi-lab2/library";
+} from '@rsoi-lab2/library';
 
 export class MockRentalsStorage implements EntityStorage<Rental, RentalFilter, RentalId> {
     constructor(initialData: Array<Required<Rental>> = []) {
@@ -30,8 +30,8 @@ export class MockRentalsStorage implements EntityStorage<Rental, RentalFilter, R
         return false;
     }
 
-    getIdType(): "string" | "number" {
-        return "string";
+    getIdType(): 'string' | 'number' {
+        return 'string';
     }
 
     async create(entity: Rental): Promise<Required<Rental>> {

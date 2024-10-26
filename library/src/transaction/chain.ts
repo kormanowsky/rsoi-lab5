@@ -1,5 +1,5 @@
-import { TransactionCommitOutput } from "./interface";
-import { Transaction } from "./simple";
+import { TransactionCommitOutput } from './interface';
+import { Transaction } from './simple';
 
 export class TransactionChain<
     TState = void, 

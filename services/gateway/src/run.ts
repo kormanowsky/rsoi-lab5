@@ -1,6 +1,6 @@
-import { CarsClient, PaymentsClient, RentalsClient } from "./client";
-import { CarsLogic, PaymentsLogic, RentalsLogic, RentalRetrievalLogic, RentalDereferenceUidsLogic, RentalProcessLogic } from "./logic";
-import { GatewayServer } from "./server";
+import { CarsClient, PaymentsClient, RentalsClient } from './client';
+import { CarsLogic, PaymentsLogic, RentalsLogic, RentalRetrievalLogic, RentalDereferenceUidsLogic, RentalProcessLogic } from './logic';
+import { GatewayServer } from './server';
 
 const 
     port = parseInt(process.env.PORT ?? '8000', 10),

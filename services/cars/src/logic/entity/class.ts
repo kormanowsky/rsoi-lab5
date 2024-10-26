@@ -1,12 +1,12 @@
-import { EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage } from "@rsoi-lab2/library";
-import { Car, CarFilter, CarId } from "./interface";
+import { EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage } from '@rsoi-lab2/library';
+import { Car, CarFilter, CarId } from './interface';
 
 export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
     constructor(storage: EntityStorage<Car, CarFilter, CarId>) {
         this.storage = storage;
     }
 
-    getIdType(): "string" | "number" {
+    getIdType(): 'string' | 'number' {
         return this.storage.getIdType();
     }
 

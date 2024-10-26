@@ -1,4 +1,4 @@
-import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId } from "@rsoi-lab2/library";
+import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId } from '@rsoi-lab2/library';
 
 import { 
     RentrievedRentalFull,
@@ -7,7 +7,7 @@ import {
     RetrievedRentalWithOptionalEntitiesAndUids,
     RetrievedRentalWithPayment,
     RetrievedRentalWithUids
-} from "./interface";
+} from './interface';
 
 export class RentalDereferenceUidsLogic {
     constructor(

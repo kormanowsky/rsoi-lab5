@@ -1,5 +1,5 @@
-import { PostgresEntityMapper, EntityPaginationFilter, EntityPaginationData } from "@rsoi-lab2/library";
-import { Car, CarFilter, CarId } from "../logic";
+import { PostgresEntityMapper, EntityPaginationFilter, EntityPaginationData } from '@rsoi-lab2/library';
+import { Car, CarFilter, CarId } from '../logic';
 
 export class PostgresCarMapper extends PostgresEntityMapper<Car, CarFilter, CarId> {
     constructor(tableName: string) {
