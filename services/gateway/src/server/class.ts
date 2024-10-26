@@ -127,7 +127,7 @@ export class GatewayServer extends Server {
         });
 
         if (response.error === true) {
-            res.status(response.code).send({error: response.message});
+            res.status(response.code).send({message: response.message});
         } else {
             res.send(this.dumpRental(response.rental));
         }
@@ -160,7 +160,7 @@ export class GatewayServer extends Server {
         });
 
         if (response.error) {
-            res.status(response.code).send({error: response.message});
+            res.status(response.code).send({message: response.message});
         } else {
             res.status(204).send();
         }
@@ -193,7 +193,7 @@ export class GatewayServer extends Server {
         });
 
         if (response.error) {
-            res.status(response.code).send({error: response.message});
+            res.status(response.code).send({message: response.message});
         } else {
             res.status(204).send();
         }

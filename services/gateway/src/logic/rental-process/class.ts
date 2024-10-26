@@ -149,7 +149,7 @@ export class RentalProcessLogic {
                         return state;
                     } catch (err) {
                         console.error(err);
-                        throw new Error('Rental Service Unavailable');
+                        throw new Error('Rental Service unavailable');
                     }
                 }, 
                 undo: async (state) => {await this.rentalsLogic.delete(state!.rental!.rentalUid);}
@@ -162,7 +162,7 @@ export class RentalProcessLogic {
                         return _;
                     } catch (err) {
                         console.error(err);
-                        throw new Error('Cars Service Unavailable');
+                        throw new Error('Cars Service unavailable');
                     }
                 }, 
                 undo: async () => {await this.carsLogic.update(request.carUid, {available: true});}
