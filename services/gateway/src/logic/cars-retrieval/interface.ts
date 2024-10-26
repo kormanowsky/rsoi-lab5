@@ -6,4 +6,4 @@ export interface CarsRetrievalRequest {
     filter: CarFilter;
 }
 
-export type CarsRetrievalResponse = {error: true; code: number; message: string} | {error: false; cars: RetrievedCars};
+export type CarsRetrievalResponse = {cars: RetrievedCars};

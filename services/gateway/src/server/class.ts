@@ -34,10 +34,7 @@ export class GatewayServer extends Server {
 
         this.carsRetrievalLogic
             .retrieveCars({filter})
-            .then((response) => response.error === false ? 
-                res.send(response.cars) : 
-                res.status(response.code).send({message: response.message})
-            )
+            .then(({cars}) => res.send(cars))
             .catch((err) => {
                 res.status(500).send({message: 'Cars service error'});
                 console.error(err);

@@ -7,11 +7,7 @@ export class CarsRetrievalLogic {
     }
 
     async retrieveCars(request: CarsRetrievalRequest): Promise<CarsRetrievalResponse> {
-        try {
-            return {error: false, cars: await this.carsLogic.getPaginatedMany(request.filter)};
-        } catch (err) {
-            return {error: true, code: 503, message: 'Cars Service unavailable'};
-        }
+        return {cars: await this.carsLogic.getPaginatedMany(request.filter)};
     }
 
     private carsLogic: EntityLogic<Car, CarFilter, CarId>;
