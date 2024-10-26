@@ -42,11 +42,14 @@ export class RentalDereferenceUidsLogic {
                 car = await this.carsLogic.getOne(rental.carUid);
             }
 
-            if (car != null) {
-                delete rentalCopy.carUid;
+            delete rentalCopy.carUid;
 
+            if (car != null) {
                 return <RetrievedRental>{...rentalCopy, car}
             }
+
+            return <RetrievedRental>{...rentalCopy, car: {}};
+
         } catch (err) {
             console.warn('Cars service failed');
             console.warn(err);
@@ -80,13 +83,15 @@ export class RentalDereferenceUidsLogic {
                 payment = await this.paymentLogic.getOne(rental.paymentUid);
             }
 
-            if (payment != null) {
-                delete rentalCopy.paymentUid;
+            delete rentalCopy.paymentUid;
 
+            if (payment != null) {
                 return <RetrievedRental>{...rentalCopy, payment}
             }
+
+            return <RetrievedRental>{...rentalCopy, payment: {}};
         } catch (err) {
-            console.warn('Cars service failed');
+            console.warn('Payment service failed');
             console.warn(err);
         }
 
