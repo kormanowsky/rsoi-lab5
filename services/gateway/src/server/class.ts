@@ -1,5 +1,5 @@
 import { Server, ServerRequest, ServerResponse, Car, Rental, EntityLogic, CarFilter, CarId } from '@rsoi-lab2/library';
-import { RentalProcessLogic, RentalRetrievalLogic, RetrievedRental } from '../logic';
+import { CarsRetrievalLogic, RentalProcessLogic, RentalRetrievalLogic, RetrievedRental } from '../logic';
 
 type RentalServerResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
     dateFrom: string;
@@ -8,13 +8,13 @@ type RentalServerResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
 
 export class GatewayServer extends Server {
     constructor(
-        carsLogic: EntityLogic<Car, CarFilter, CarId>, 
+        carsRetrievalLogic: CarsRetrievalLogic,
         rentalRetrievalLogic: RentalRetrievalLogic,
         rentalProcessLogic: RentalProcessLogic,
         port: number
     ) {
         super(port);
-        this.carsLogic = carsLogic;
+        this.carsRetrievalLogic = carsRetrievalLogic;
         this.rentalRetrievalLogic = rentalRetrievalLogic;
         this.rentalProcessLogic = rentalProcessLogic;
     }
@@ -30,11 +30,14 @@ export class GatewayServer extends Server {
     }
 
     protected getCars(req: ServerRequest, res: ServerResponse): void {
-        const parsedFilter = this.parseCarFilter(req.query);
+        const filter = this.parseCarFilter(req.query);
 
-        this.carsLogic
-            .getPaginatedMany(parsedFilter)
-            .then((data) => res.send(data))
+        this.carsRetrievalLogic
+            .retrieveCars({filter})
+            .then((response) => response.error === false ? 
+                res.send(response.cars) : 
+                res.status(response.code).send({message: response.message})
+            )
             .catch((err) => {
                 res.status(500).send({message: 'Cars service error'});
                 console.error(err);
@@ -282,7 +285,7 @@ export class GatewayServer extends Server {
         };
     }
 
-    private carsLogic: EntityLogic<Car, CarFilter, CarId>;
+    private carsRetrievalLogic: CarsRetrievalLogic;
     private rentalRetrievalLogic: RentalRetrievalLogic;
     private rentalProcessLogic: RentalProcessLogic;
 }
