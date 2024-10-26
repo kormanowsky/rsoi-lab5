@@ -195,15 +195,15 @@ export class RentalProcessLogic {
                 undo: async () => {await this.carsLogic.update(rental.carUid, {available: false})}
             }),
             new Transaction({
-                do: async () => {await this.paymentsLogic.update(rental.paymentUid, {status: 'CANCELED'})},
-                undo: async () => {await this.paymentsLogic.update(rental.paymentUid, {status: 'PAID'})}
-            }),
-            new Transaction({
                 do: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'CANCELED'})},
                 undo: async () => {
                     // TODO: сделать норм откат транзакции
                     // await this.rentalsLogic.update(rental.rentalUid, {status: 'IN_PROGRESS'})
                 }
+            }),
+            new Transaction({
+                do: async () => {await this.paymentsLogic.update(rental.paymentUid, {status: 'CANCELED'})},
+                undo: async () => {await this.paymentsLogic.update(rental.paymentUid, {status: 'PAID'})}
             }),
         );
 
