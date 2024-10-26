@@ -56,13 +56,29 @@ jobs:
           RENTAL_STORAGE_CONN_STRING: ${{secrets.RENTAL_STORAGE_CONN_STRING}}
           WAIT_PORTS: 8080,8070,8060,8050
 
-      - name: Run API Tests
+      - name: Run API Tests [No Payment]
         timeout-minutes: 5
         run: ./scripts/test-script.sh
         env:
           VARIANT: v3
-          SERVICE_NAME: gateway
-          PORT_NUMBER: 8080
+          SERVICE_NAME: payment
+          PORT_NUMBER: 8050
+
+      - name: Run API Tests [No Rental]
+        timeout-minutes: 5
+        run: ./scripts/test-script.sh
+        env:
+          VARIANT: v3
+          SERVICE_NAME: rental
+          PORT_NUMBER: 8060
+
+      - name: Run API Tests [No Cars]
+        timeout-minutes: 5
+        run: ./scripts/test-script.sh
+        env:
+          VARIANT: v3
+          SERVICE_NAME: cars
+          PORT_NUMBER: 8070
 
       - uses: education/autograding@v1
         id: autograder
