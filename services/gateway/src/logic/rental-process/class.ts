@@ -134,7 +134,13 @@ export class RentalProcessLogic {
                         throw new Error('Payment Service unavailable');
                     }
                 }, 
-                undo: async (state) => {await this.paymentsLogic.delete(state!.payment!.paymentUid);}
+                undo: async (state) => {
+                    if (state.payment != null) {
+                        await this.paymentsLogic.delete(state.payment.paymentUid);
+                        delete state.payment;
+                    }
+                    return state;
+                }
             }), 
 
             new Transaction({
@@ -152,7 +158,13 @@ export class RentalProcessLogic {
                         throw new Error('Rental Service unavailable');
                     }
                 }, 
-                undo: async (state) => {await this.rentalsLogic.delete(state!.rental!.rentalUid);}
+                undo: async (state) => {
+                    if (state.rental != null) {
+                        await this.rentalsLogic.delete(state.rental.rentalUid);
+                        delete state.rental;
+                    } 
+                    return state;
+                }
             }), 
 
             new Transaction({
@@ -165,7 +177,7 @@ export class RentalProcessLogic {
                         throw new Error('Cars Service unavailable');
                     }
                 }, 
-                undo: async () => {await this.carsLogic.update(request.carUid, {available: true});}
+                undo: async (_) => {await this.carsLogic.update(request.carUid, {available: true}); return _;}
             })
         );
 

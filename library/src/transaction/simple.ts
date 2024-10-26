@@ -1,7 +1,7 @@
 import { TransactionCommitOutput, TransactionInit } from './interface';
 
-export class Transaction<TIn, TOut> {
-    constructor(init?: TransactionInit<TIn, TOut>) {
+export class Transaction<TState> {
+    constructor(init?: TransactionInit<TState>) {
         if (init != null) {
             this.commitAction = init.do;
             this.rollbackAction = init.undo;
@@ -11,20 +11,20 @@ export class Transaction<TIn, TOut> {
         }
     }
 
-    async commit(input: TIn): Promise<TransactionCommitOutput<TOut>> {
+    async commit(input: TState): Promise<TransactionCommitOutput<TState>> {
         try {
             const output = await this.commitAction(input);
             
             return {hasError: false, output};
     
         } catch (err) {
-            return this.rollback(null, err);
+            return this.rollback(input, err);
         }
     }
 
-    async rollback(output: TOut | null, err: Error): Promise<TransactionCommitOutput<TOut>> {
+    async rollback(output: TState, err: Error): Promise<TransactionCommitOutput<TState>> {
         try {
-            await this.rollbackAction(output, err);
+            output = await this.rollbackAction(output, err);
         } catch (err) {
             console.warn('While undo()-ing a Transaction:');
             console.warn(err);
@@ -35,14 +35,14 @@ export class Transaction<TIn, TOut> {
         return {hasError: true, output, error: err};
     }
 
-    protected do(_: TIn): Promise<TOut> {
+    protected do(_: TState): Promise<TState> {
         throw new Error('not implemented');
     }
 
-    protected undo(_: TOut | null, __: Error): Promise<void> {
+    protected undo(_: TState, __: Error): Promise<TState> {
         throw new Error('not implemented');
     }
 
-    private commitAction: TransactionInit<TIn, TOut>['do'];
-    private rollbackAction: TransactionInit<TIn, TOut>['undo'];
+    private commitAction: TransactionInit<TState>['do'];
+    private rollbackAction: TransactionInit<TState>['undo'];
 }

@@ -1,10 +1,10 @@
-export interface TransactionInit<TIn, TOut> {
-    do(input: TIn): TOut | Promise<TOut>;
-    undo(output: TOut | null, err: Error): void | Promise<void>;
+export interface TransactionInit<TState> {
+    do(input: TState): TState | Promise<TState>;
+    undo(output: TState | null, err: Error): TState | Promise<TState>;
 }
 
-export interface TransactionCommitOutput<TOut> {
+export interface TransactionCommitOutput<TState> {
     hasError: boolean;
     error?: Error;
-    output: TOut | null;
+    output: TState;
 }
