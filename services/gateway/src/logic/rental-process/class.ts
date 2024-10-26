@@ -35,7 +35,7 @@ export class RentalProcessLogic {
         const {error, output} = await this.commitStartRental({...request, price});
 
         if (error != null || output == null) {
-            return {error: true, code: 500, message: `Transaction error: ${error}`};
+            return {error: true, code: 503, message: `Transaction error: ${error}`};
         }
 
         const {rental, payment} = output;
