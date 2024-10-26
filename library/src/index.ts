@@ -4,3 +4,4 @@ export * from './postgres-storage';
 export * from './client';
 export * from './types';
 export * from './transaction';
+export * from './circuit-breaker';
