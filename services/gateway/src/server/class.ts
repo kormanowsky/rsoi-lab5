@@ -36,7 +36,7 @@ export class GatewayServer extends Server {
             .getPaginatedMany(parsedFilter)
             .then((data) => res.send(data))
             .catch((err) => {
-                res.status(500).send({error: 'Cars service error'});
+                res.status(500).send({message: 'Cars service error'});
                 console.error(err);
             });
     }
@@ -47,7 +47,7 @@ export class GatewayServer extends Server {
         try {
             username = this.parseUsername(req.headers['x-user-name']);
         } catch (err) {
-            res.status(401).send({error: 'Authentication failure'});
+            res.status(401).send({message: 'Authentication failure'});
             console.log(err);
             return;
         }
@@ -57,7 +57,7 @@ export class GatewayServer extends Server {
             .then(({rentals}) => rentals.map(this.dumpRental.bind(this)))
             .then(res.send.bind(res))
             .catch((err) => {
-                res.status(500).send({error: 'Rental retrieval failure'});
+                res.status(500).send({messa: 'Rental retrieval failure'});
                 console.error(err);
             });
     }
@@ -68,7 +68,7 @@ export class GatewayServer extends Server {
         try {
             username = this.parseUsername(req.headers['x-user-name']);
         } catch (err) {
-            res.status(401).send({error: 'Authentication failure'});
+            res.status(401).send({message: 'Authentication failure'});
             console.log(err);
             return;
         }
@@ -78,7 +78,7 @@ export class GatewayServer extends Server {
         try {
             rentalUid = this.parseId(req.params.id);
         } catch (err) {
-            res.status(400).send({error: 'Bad ID'});
+            res.status(400).send({message: 'Bad ID'});
             console.error(err);
             return;
         }
@@ -88,14 +88,14 @@ export class GatewayServer extends Server {
             const {rental} = await this.rentalRetrievalLogic.retrieveRental({rentalUid, username});
 
             if (rental == null) {
-                res.status(404).send({error: 'No such rental'});
+                res.status(404).send({message: 'No such rental'});
                 return;
             }
 
             res.send(this.dumpRental(rental));
 
         } catch (err) {
-            res.status(500).send({error: 'Rental service failure'});
+            res.status(500).send({message: 'Rental service failure'});
             console.error(err);
         }
     }
@@ -106,7 +106,7 @@ export class GatewayServer extends Server {
         try {
             username = this.parseUsername(req.headers['x-user-name']);
         } catch (err) {
-            res.status(401).send({error: 'Authentication failure'});
+            res.status(401).send({message: 'Authentication failure'});
             console.log(err);
             return;
         }
@@ -116,7 +116,7 @@ export class GatewayServer extends Server {
         try {
             rentalServerRequest = this.parseRentalServerRequest(req.body);
         } catch (err) {
-            res.status(400).send({error: 'Bad request'});
+            res.status(400).send({message: 'Bad request'});
             console.error(err);
             return;
         }
@@ -139,7 +139,7 @@ export class GatewayServer extends Server {
         try {
             username = this.parseUsername(req.headers['x-user-name']);
         } catch (err) {
-            res.status(401).send({error: 'Authentication failure'});
+            res.status(401).send({message: 'Authentication failure'});
             console.log(err);
             return;
         }
@@ -149,7 +149,7 @@ export class GatewayServer extends Server {
         try {
             rentalUid = this.parseId(req.params.id);
         } catch (err) {
-            res.status(400).send({error: 'Bad ID'});
+            res.status(400).send({message: 'Bad ID'});
             console.error(err);
             return;
         }
@@ -172,7 +172,7 @@ export class GatewayServer extends Server {
         try {
             username = this.parseUsername(req.headers['x-user-name']);
         } catch (err) {
-            res.status(401).send({error: 'Authentication failure'});
+            res.status(401).send({message: 'Authentication failure'});
             console.log(err);
             return;
         }
@@ -182,7 +182,7 @@ export class GatewayServer extends Server {
         try {
             rentalUid = this.parseId(req.params.id);
         } catch (err) {
-            res.status(400).send({error: 'Bad ID'});
+            res.status(400).send({message: 'Bad ID'});
             console.error(err);
             return;
         }
