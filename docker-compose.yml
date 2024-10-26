@@ -1,20 +1,113 @@
 version: "3"
 services:
-  postgres:
+  cars: 
+    depends_on:
+      - cars-postgres
+    image: cars:latest
+    container_name: cars
+    pull_policy: never 
+    build: 
+      args:
+        SERVICE: cars
+    environment: 
+      CONN_STRING: ${CARS_STORAGE_CONN_STRING}
+      PORT: 8070
+    restart: on-failure
+    ports: 
+      - "8070:8070"
+
+  cars-postgres:
     image: library/postgres:13
-    container_name: postgres
+    container_name: cars-postgres
+    pull_policy: if_not_present
     restart: on-failure
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "postgres"
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${CARS_POSTGRES_USER}
+      POSTGRES_PASSWORD: "${CARS_POSTGRES_PASSWORD}"
+      POSTGRES_DB: ${CARS_POSTGRES_DB}
     volumes:
-      - db-data:/var/lib/postgresql/data
-      - ./postgres/:/docker-entrypoint-initdb.d/
-    ports:
-      - "5432:5432"
+      - cars-postgres-data:/var/lib/postgresql/data
+      - ./postgres/cars/:/docker-entrypoint-initdb.d/
 
-# TODO добавить сервисы
+  rental: 
+    depends_on:
+      - rental-postgres
+    image: rental:latest
+    container_name: rental
+    pull_policy: never 
+    build: 
+      args:
+        SERVICE: rental 
+    environment: 
+      CONN_STRING: ${RENTAL_STORAGE_CONN_STRING}
+      PORT: 8060
+    restart: on-failure
+    ports: 
+      - "8060:8060"
+  
+  rental-postgres:
+    image: library/postgres:13
+    container_name: rental-postgres
+    pull_policy: if_not_present
+    restart: on-failure
+    environment:
+      POSTGRES_USER: ${RENTAL_POSTGRES_USER}
+      POSTGRES_PASSWORD: "${RENTAL_POSTGRES_PASSWORD}"
+      POSTGRES_DB: ${RENTAL_POSTGRES_DB}
+    volumes:
+      - rental-postgres-data:/var/lib/postgresql/data
+      - ./postgres/rental/:/docker-entrypoint-initdb.d/
+
+  payment: 
+    depends_on: 
+      - payment-postgres
+    image: payment:latest
+    container_name: payment
+    pull_policy: never 
+    build: 
+      args:
+        SERVICE: payment 
+    environment: 
+      CONN_STRING: ${PAYMENT_STORAGE_CONN_STRING}
+      PORT: 8050
+    restart: on-failure
+    ports: 
+      - "8050:8050"
+
+  payment-postgres:
+    image: library/postgres:13
+    container_name: payment-postgres
+    pull_policy: if_not_present
+    restart: on-failure
+    environment:
+      POSTGRES_USER: ${PAYMENT_POSTGRES_USER}
+      POSTGRES_PASSWORD: "${PAYMENT_POSTGRES_PASSWORD}"
+      POSTGRES_DB: ${PAYMENT_POSTGRES_DB}
+    volumes:
+      - payment-postgres-data:/var/lib/postgresql/data
+      - ./postgres/payment/:/docker-entrypoint-initdb.d/
+
+  gateway: 
+    depends_on:
+      - cars
+      - rental
+      - payment
+    image: gateway:latest
+    container_name: gateway
+    pull_policy: never 
+    build: 
+      args:
+        SERVICE: gateway 
+    environment:
+      CARS_API_URL: http://cars:8070/api/v1/cars/
+      PAYMENT_API_URL: http://payment:8050/api/v1/payments/
+      RENTAL_API_URL: http://rental:8060/api/v1/rentals/
+      PORT: 8080
+    restart: on-failure
+    ports: 
+      - "8080:8080"
 
 volumes:
-  db-data:
+  cars-postgres-data:
+  rental-postgres-data:
+  payment-postgres-data:
