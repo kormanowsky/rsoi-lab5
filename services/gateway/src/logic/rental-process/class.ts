@@ -35,7 +35,7 @@ export class RentalProcessLogic {
         const {error, output} = await this.commitStartRental({...request, price});
 
         if (error != null || output == null) {
-            return {error: true, code: 503, message: `Transaction error: ${error}`};
+            return {error: true, code: 503, message: error.message};
         }
 
         const {rental, payment} = output;
@@ -126,29 +126,44 @@ export class RentalProcessLogic {
         const chain = new TransactionChain<{payment?: Required<Payment>; rental?: Required<Rental>}>(
             new Transaction({
                 do: async (state) => {
-                    state.payment = await this.paymentsLogic.create({status: 'PAID', price: request.price});
-                    return state;
+                    try {
+                        state.payment = await this.paymentsLogic.create({status: 'PAID', price: request.price});
+                        return state;
+                    } catch (err) {
+                        console.error(err);
+                        throw new Error('Payment Service unavailable');
+                    }
                 }, 
                 undo: async (state) => {await this.paymentsLogic.delete(state!.payment!.paymentUid);}
             }), 
 
             new Transaction({
                 do: async (state) => {
-                    state.rental = await this.rentalsLogic.create({
-                        ...request,
-                        paymentUid: state.payment!.paymentUid,
-                        status: 'IN_PROGRESS'
-                    });
+                    try {
+                        state.rental = await this.rentalsLogic.create({
+                            ...request,
+                            paymentUid: state.payment!.paymentUid,
+                            status: 'IN_PROGRESS'
+                        });
 
-                    return state;
+                        return state;
+                    } catch (err) {
+                        console.error(err);
+                        throw new Error('Rental Service Unavailable');
+                    }
                 }, 
                 undo: async (state) => {await this.rentalsLogic.delete(state!.rental!.rentalUid);}
             }), 
 
             new Transaction({
                 do: async (_) => {
-                    await this.carsLogic.update(request.carUid, {available: false});
-                    return _;
+                    try {
+                        await this.carsLogic.update(request.carUid, {available: false});
+                        return _;
+                    } catch (err) {
+                        console.error(err);
+                        throw new Error('Cars Service Unavailable');
+                    }
                 }, 
                 undo: async () => {await this.carsLogic.update(request.carUid, {available: true});}
             })
