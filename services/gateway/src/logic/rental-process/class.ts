@@ -200,7 +200,10 @@ export class RentalProcessLogic {
             }),
             new Transaction({
                 do: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'CANCELED'})},
-                undo: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'IN_PROGRESS'})}
+                undo: async () => {
+                    // TODO: сделать норм откат транзакции
+                    // await this.rentalsLogic.update(rental.rentalUid, {status: 'IN_PROGRESS'})
+                }
             }),
         );
 
@@ -215,7 +218,10 @@ export class RentalProcessLogic {
             }),
             new Transaction({
                 do: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'FINISHED'})},
-                undo: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'IN_PROGRESS'})}
+                undo: async () => {
+                    // TODO: сделать норм откат транзакции
+                    // await this.rentalsLogic.update(rental.rentalUid, {status: 'IN_PROGRESS'})
+                }
             }),
         );
 
