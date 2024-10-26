@@ -2,7 +2,7 @@ import { Car, CarFilter, CarId, CircuitBreaker, EntityLogic } from "@rsoi-lab2/l
 import { CarsRetrievalLogic, CarsRetrievalRequest, CarsRetrievalResponse } from "../cars-retrieval";
 
 export class CBCarsRetrievalLogic extends CarsRetrievalLogic {
-    constructor(cb: CircuitBreaker, carsLogic: EntityLogic<Car, CarFilter, CarId>) {
+    constructor(carsLogic: EntityLogic<Car, CarFilter, CarId>, cb: CircuitBreaker) {
         super(carsLogic);
         this.cb = cb;
     }

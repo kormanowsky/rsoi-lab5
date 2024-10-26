@@ -1,5 +1,7 @@
+import { CircuitBreaker } from '@rsoi-lab2/library';
 import { CarsClient, PaymentsClient, RentalsClient } from './client';
 import { CarsLogic, PaymentsLogic, RentalsLogic, RentalRetrievalLogic, RentalDereferenceUidsLogic, RentalProcessLogic, CarsRetrievalLogic } from './logic';
+import { CBCarsRetrievalLogic } from './logic/cars-retrieval-with-circuit-breaker/class';
 import { GatewayServer } from './server';
 
 const 
@@ -7,6 +9,9 @@ const
     carsApiUrl = process.env.CARS_API_URL!,
     paymentApiUrl = process.env.PAYMENT_API_URL!,
     rentalApiUrl = process.env.RENTAL_API_URL!,
+    noCircutBreakers = Boolean(process.env.NO_CIRCUIT_BREAKERS);
+
+const 
     carsClient = new CarsClient(carsApiUrl),
     paymentsClient = new PaymentsClient(paymentApiUrl),
     rentalsClient = new RentalsClient(rentalApiUrl),
@@ -15,8 +20,12 @@ const
     rentalsLogic = new RentalsLogic(rentalsClient),
     rentalDereferenceLogic = new RentalDereferenceUidsLogic(carsLogic, paymentsLogic),
     rentalRetrievalLogic = new RentalRetrievalLogic(rentalsLogic, rentalDereferenceLogic),
-    rentalProcessLogic = new RentalProcessLogic(carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic),
-    carsRetrievalLogic = new CarsRetrievalLogic(carsLogic);
+    rentalProcessLogic = new RentalProcessLogic(carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic);
+
+const 
+    carsRetrievalLogic = noCircutBreakers ? 
+        new CarsRetrievalLogic(carsLogic) : 
+        new CBCarsRetrievalLogic(new CircuitBreaker(), carsLogic);
 
 const server = new GatewayServer(
     carsRetrievalLogic, 
