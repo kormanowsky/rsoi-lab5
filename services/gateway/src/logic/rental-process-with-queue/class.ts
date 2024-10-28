@@ -32,32 +32,54 @@ export class RQRentalProcessLogic extends RentalProcessLogic {
     }
 
     async cancelRental(request: RentalProcessCancelRequest): Promise<RentalProcessCancelResponse> {
+        return this.cancelRentalOrQueueRetry(request);
+    }
+
+    async finishRental(request: RentalProcessFinishRequest): Promise<RentalProcessFinishResponse> {
+        return this.finishRentalOrQueueRetry(request);
+    }
+
+    protected async cancelRentalOrQueueRetry(
+        request: RentalProcessCancelRequest, 
+        createdAt: number = Date.now()
+    ): Promise<RentalProcessCancelResponse> {
         const superResult = await super.cancelRental(request);
 
         if (superResult.error === true) {
             console.warn(`Queuing retry of cancelRental() after error: ${superResult.error} ${superResult.message}`);
 
-            this.queue.createJob({
+            const job = this.queue.createJob({
                 type: 'CANCEL_RENTAL',
                 payload: request,
-                createdAt: Date.now(),
+                createdAt
             });
+
+            job.save();
+        } else {
+            console.info('Successful request, nothing to queue');
         }
 
         return {error: false};
     }
 
-    async finishRental(request: RentalProcessFinishRequest): Promise<RentalProcessFinishResponse> {
+    protected async finishRentalOrQueueRetry(
+        request: RentalProcessFinishRequest,
+        createdAt: number = Date.now()
+    ): Promise<RentalProcessFinishResponse> {
         const superResult = await super.finishRental(request);
 
         if (superResult.error === true) {
             console.warn(`Queuing retry of finishRental() after error: ${superResult.error} ${superResult.message}`);
 
-            this.queue.createJob({
+            const job = this.queue.createJob({
                 type: 'FINISH_RENTAL',
                 payload: request,
-                createdAt: Date.now()
+                createdAt
             });
+
+            job.save();
+        } else {
+            console.info('Successful request, nothing to queue');
         }
 
         return {error: false};
@@ -70,10 +92,14 @@ export class RQRentalProcessLogic extends RentalProcessLogic {
             return;
         }
 
+        await new Promise((resolve) => setTimeout(resolve, this.jobKeepAliveMs / 10));
+
+        let result: {error: boolean};
+
         if (type === 'CANCEL_RENTAL') {
-            await this.cancelRental(payload);
+            result = await this.cancelRentalOrQueueRetry(payload, createdAt);
         } else if (type === 'FINISH_RENTAL') {
-            await this.finishRental(payload);
+            result = await this.finishRentalOrQueueRetry(payload, createdAt);
         }
     }
 
