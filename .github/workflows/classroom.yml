@@ -67,7 +67,7 @@ jobs:
         continue-on-error: true
 
       - name: Show Logs
-        run: docker compose logs gateway
+        run: docker compose logs 
 
       - uses: education/autograding@v1
         id: autograder
