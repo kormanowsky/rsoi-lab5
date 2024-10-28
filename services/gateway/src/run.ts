@@ -3,6 +3,7 @@ import { CarsClient, PaymentsClient, RentalsClient } from './client';
 import { CarsLogic, PaymentsLogic, RentalsLogic, RentalRetrievalLogic, RentalDereferenceUidsLogic, RentalProcessLogic, CarsRetrievalLogic } from './logic';
 import { CBCarsRetrievalLogic } from './logic/cars-retrieval-with-circuit-breaker/class';
 import { GatewayServer } from './server';
+import { CBRentalRetrievalLogic } from './logic/rental-retrieval-with-circuit-breaker';
 
 const 
     port = parseInt(process.env.PORT ?? '8000', 10),
@@ -19,13 +20,17 @@ const
     paymentsLogic = new PaymentsLogic(paymentsClient),
     rentalsLogic = new RentalsLogic(rentalsClient),
     rentalDereferenceLogic = new RentalDereferenceUidsLogic(carsLogic, paymentsLogic),
-    rentalRetrievalLogic = new RentalRetrievalLogic(rentalsLogic, rentalDereferenceLogic),
     rentalProcessLogic = new RentalProcessLogic(carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic);
 
 const 
     carsRetrievalLogic = noCircutBreakers ? 
         new CarsRetrievalLogic(carsLogic) : 
         new CBCarsRetrievalLogic(new CircuitBreaker(), carsLogic);
+
+const 
+    rentalRetrievalLogic = noCircutBreakers ? 
+        new RentalRetrievalLogic(rentalsLogic, rentalDereferenceLogic) : 
+        new CBRentalRetrievalLogic(new CircuitBreaker(), rentalsLogic, rentalDereferenceLogic);
 
 const server = new GatewayServer(
     carsRetrievalLogic, 
