@@ -14,7 +14,7 @@ import { RentalDereferenceUidsLogic } from "../rental-retrieval";
 
 import { Queue, QueueJob } from "./interface";
 
-export const maxQueueJobKeepAliveMs = 10_000;
+export const maxQueueJobKeepAliveMs = 20_000;
 
 export class RQRentalProcessLogic extends RentalProcessLogic {
     constructor(
