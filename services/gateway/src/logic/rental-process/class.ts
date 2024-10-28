@@ -63,8 +63,7 @@ export class RentalProcessLogic {
         const {error} = await this.commitCancelRental(rental);
 
         if (error != null) {
-            // TODO: поставить в очередь вместо 500
-            // return {error: true, code: 500, message: `Transaction error: ${error}`};
+            return {error: true, code: 500, message: `Transaction error: ${error}`};
         }
 
         return {error: false};
@@ -87,8 +86,7 @@ export class RentalProcessLogic {
         const {error} = await this.commitFinishRental(rental);
 
         if (error != null) {
-            // TODO: поставить в очередь вместо 500
-            // return {error: true, code: 500, message: `Transaction error: ${error}`};
+            return {error: true, code: 500, message: `Transaction error: ${error}`};
         }
 
         return {error: false};
