@@ -92,11 +92,13 @@ export class RQRentalProcessLogic extends RentalProcessLogic {
             return;
         }
 
-        if (type === 'CANCEL_RENTAL') {
-            await this.cancelRentalOrQueueRetry(payload, createdAt);
-        } else if (type === 'FINISH_RENTAL') {
-            await this.finishRentalOrQueueRetry(payload, createdAt);
-        }
+        setTimeout(async () => {
+            if (type === 'CANCEL_RENTAL') {
+                await this.cancelRentalOrQueueRetry(payload, createdAt);
+            } else if (type === 'FINISH_RENTAL') {
+                await this.finishRentalOrQueueRetry(payload, createdAt);
+            }
+        }, this.jobKeepAliveMs / 10);
     }
 
     private queue: Queue<QueueJob>;
