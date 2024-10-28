@@ -1,32 +1,55 @@
-export const circuitBreakerMaxErrors = 10;
+import { CircuitBreakerRegistration } from "./interface";
+import { circuitBreakerMaxErrors, CircuitBreakerSwitch } from "./switch";
 
 export class CircuitBreaker {
-    constructor(maxErrors = circuitBreakerMaxErrors) {
-        this.errorCounter = 0;
-        this.maxErrors = maxErrors;
+    constructor() {
+        this.registrations = {};
     }
 
-    reportError() {
-        this.errorCounter++;
-        if (this.errorCounter === this.maxErrors) {
-            this.state = 'closed';
+    register<TArgs extends unknown[] = [], TResult = void>(registration: CircuitBreakerRegistration<TArgs, TResult>): void {
+        this.registrations[registration.id] = {
+            ...registration,
+            switch: registration.switch ?? new CircuitBreakerSwitch(registration.maxErrors ?? circuitBreakerMaxErrors),
+            maxErrors: registration.maxErrors ?? circuitBreakerMaxErrors,
+            restoreDelay: registration.restoreDelay ?? 5000
+        };
+    }
+
+    dispatch<TArgs extends unknown[] = [], TResult = void>(id: string, ...args: TArgs): TResult {
+        if (!this.registrations.hasOwnProperty(id)) {
+            throw new Error('CircuitBreaker failed: no such operation');
+        }
+
+        const registration = <Required<CircuitBreakerRegistration<TArgs, TResult>>>this.registrations[id];
+
+        if (registration.switch.isClosed()) {
+            return registration.fallbackOperation(...args);
+        }
+
+        try {
+            return registration.realOperation(...args);
+
+        } catch (err) {
+            registration.switch.reportError();
+
+            if (registration.switch.isClosed()) { 
+
+                setTimeout(async () => {
+                    try {
+                        await registration.realOperation(...args);
+                        registration.switch.reset();
+
+                    } catch (err) {
+                        console.warn(`While restoring operation: ${id}`);
+                        console.warn(err);
+                    }
+                }, registration.restoreDelay);
+
+            }
+
+            return registration.fallbackOperation(...args);
         }
     }
 
-    reset() {
-        this.errorCounter = 0;
-        this.state = 'open';
-    }
-
-    isOpen(): boolean {
-        return this.state === 'open';
-    }
-
-    isClosed(): boolean {
-        return this.state === 'closed';
-    }
-
-    private errorCounter: number;
-    private maxErrors: number;
-    private state: 'open' | 'closed' = 'open';
+    private registrations: Record<string, Required<CircuitBreakerRegistration>>; 
 }

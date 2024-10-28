@@ -5,23 +5,19 @@ export class CBCarsRetrievalLogic extends CarsRetrievalLogic {
     constructor(cb: CircuitBreaker, carsLogic: EntityLogic<Car, CarFilter, CarId>) {
         super(carsLogic);
         this.cb = cb;
+
+        this.cb.register({
+            id: this.retrieveCarsOperationId, 
+            realOperation: (request: CarsRetrievalRequest) => super.retrieveCars(request),
+            fallbackOperation: (request: CarsRetrievalRequest) => this.retrieveCarsFallback(request)
+        });
     }
 
     async retrieveCars(request: CarsRetrievalRequest): Promise<CarsRetrievalResponse> {
-        if (this.cb.isClosed()) {
-            return this.retrieveCarsFallback();
-        }
-
-        try {
-            return super.retrieveCars(request);
-        } catch (err) {
-            this.cb.reportError();
-            setTimeout(() => this.tryRestoreCarsService(request), 5000);
-            return this.retrieveCarsFallback();
-        }
+        return this.cb.dispatch(this.retrieveCarsOperationId, request);
     }
 
-    protected retrieveCarsFallback(): CarsRetrievalResponse {
+    protected async retrieveCarsFallback(_: CarsRetrievalRequest): Promise<CarsRetrievalResponse> {
         return {
             cars: {
                 items: [],
@@ -32,15 +28,6 @@ export class CBCarsRetrievalLogic extends CarsRetrievalLogic {
         };
     }
 
-    protected async tryRestoreCarsService(request: CarsRetrievalRequest): Promise<void> {
-        try {
-            await super.retrieveCars(request);
-            this.cb.reset();
-        } catch (err) {
-            console.warn('When trying to restore cars service:');
-            console.warn(err);
-        }
-    }
-
     private cb: CircuitBreaker;
+    private readonly retrieveCarsOperationId = 'retrieveCars';
 }
