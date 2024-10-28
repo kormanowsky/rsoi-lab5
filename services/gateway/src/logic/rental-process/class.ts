@@ -190,15 +190,15 @@ export class RentalProcessLogic {
         const chain = new TransactionChain<void>(
             new Transaction({
                 do: async () => {await this.carsLogic.update(rental.carUid, {available: true})},
-                undo: async () => {await this.carsLogic.update(rental.carUid, {available: false})}
-            }),
-            new Transaction({
-                do: async () => {await this.paymentsLogic.update(rental.paymentUid, {status: 'CANCELED'})},
-                undo: async () => {await this.paymentsLogic.update(rental.paymentUid, {status: 'PAID'})}
+                undo: async () => {}
             }),
             new Transaction({
                 do: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'CANCELED'})},
-                undo: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'IN_PROGRESS'})}
+                undo: async () => {}
+            }),
+            new Transaction({
+                do: async () => {await this.paymentsLogic.update(rental.paymentUid, {status: 'CANCELED'})},
+                undo: async () => {}
             }),
         );
 
@@ -209,11 +209,11 @@ export class RentalProcessLogic {
         const chain = new TransactionChain<void>(
             new Transaction({
                 do: async () => {await this.carsLogic.update(rental.carUid, {available: true})},
-                undo: async () => {await this.carsLogic.update(rental.carUid, {available: false})}
+                undo: async () => {}
             }),
             new Transaction({
                 do: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'FINISHED'})},
-                undo: async () => {await this.rentalsLogic.update(rental.rentalUid, {status: 'IN_PROGRESS'})}
+                undo: async () => {}
             }),
         );
 

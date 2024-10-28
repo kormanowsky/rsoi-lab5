@@ -1,5 +1,5 @@
 import { Rental } from '@rsoi-lab2/library';
-import { RentalDereferenceUidsLogic } from '../src/logic';
+import { RentalDereferenceUidsLogic, RetrievedRentalWithCar } from '../src/logic';
 import { createRentalDereferenceUidsLogic } from './mocks/helpers';
 import { mockRental } from './mocks/const';
 
@@ -19,34 +19,39 @@ describe('RentalDereferenceUidsLogic', () => {
                 });
 
                 if (carsOk) {
-                    test('разворачивает carUid', async () => {
+                    test('разворачивает carUid в непустой объект', async () => {
                         const result = await logic.tryDereferenceRentalUids(rental);
                 
                         expect(result).toHaveProperty('car');
                         expect(result).not.toHaveProperty('carUid');
+                        expect(result).toHaveProperty('car.carUid');
                     });
                 } else {
-                    test('не трогает carUid', async () => {
+                    test('разворачивает carUid в пустой объект', async () => {
                         const result = await logic.tryDereferenceRentalUids(rental);
                 
-                        expect(result).not.toHaveProperty('car');
-                        expect(result).toHaveProperty('carUid');
+                        expect(result).toHaveProperty('car');
+                        expect(result).not.toHaveProperty('carUid');
+                        expect(result).not.toHaveProperty('car.carUid');
                     });
                 }
                 
                 if (paymentsOk) {
-                    test('разворачивает paymentUid', async () => {
+                    test('разворачивает paymentUid в непустой объект', async () => {
                         const result = await logic.tryDereferenceRentalUids(rental);
                 
                         expect(result).toHaveProperty('payment');
                         expect(result).not.toHaveProperty('paymentUid');
+                        expect(result).toHaveProperty('payment.paymentUid');
                     });
+
                 } else {
-                    test('не трогает paymentUid', async () => {
+                    test('не трогает paymentUid в пустой объект', async () => {
                         const result = await logic.tryDereferenceRentalUids(rental);
                 
-                        expect(result).not.toHaveProperty('payment');
-                        expect(result).toHaveProperty('paymentUid');
+                        expect(result).toHaveProperty('payment');
+                        expect(result).not.toHaveProperty('paymentUid');
+                        expect(result).not.toHaveProperty('payment.paymentUid');
                     });
                 }
             });

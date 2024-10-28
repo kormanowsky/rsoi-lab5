@@ -36,6 +36,8 @@ export class RentalDereferenceUidsLogic {
         car: Required<Car> | null = null
     ): Promise<RetrievedRental> {
         const rentalCopy: RetrievedRentalWithOptionalEntitiesAndUids = {...rental};
+
+        delete rentalCopy.carUid;
         
         try {
             if (car == null) {
@@ -43,8 +45,6 @@ export class RentalDereferenceUidsLogic {
             }
 
             if (car != null) {
-                delete rentalCopy.carUid;
-
                 return <RetrievedRental>{...rentalCopy, car}
             }
         } catch (err) {
@@ -52,7 +52,7 @@ export class RentalDereferenceUidsLogic {
             console.warn(err);
         }
 
-        return rental;
+        return <RetrievedRental>{...rentalCopy, car: {}};
     }
 
     async tryDereferenceRentalPaymentUid(rental: RetrievedRentalWithUids): 
@@ -74,6 +74,8 @@ export class RentalDereferenceUidsLogic {
         payment: Required<Payment> | null = null
     ): Promise<RetrievedRental> {
         const rentalCopy: RetrievedRentalWithOptionalEntitiesAndUids = {...rental};
+
+        delete rentalCopy.paymentUid;
         
         try {
             if (payment == null) {
@@ -81,16 +83,14 @@ export class RentalDereferenceUidsLogic {
             }
 
             if (payment != null) {
-                delete rentalCopy.paymentUid;
-
                 return <RetrievedRental>{...rentalCopy, payment}
             }
         } catch (err) {
-            console.warn('Cars service failed');
+            console.warn('Payment service failed');
             console.warn(err);
         }
 
-        return rental;
+        return <RetrievedRental>{...rentalCopy, payment: {}};
     }
 
     async tryDereferenceRentalUids(rental: RetrievedRentalWithUids): Promise<RetrievedRental> {

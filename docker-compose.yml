@@ -92,6 +92,7 @@ services:
       - cars
       - rental
       - payment
+      - gateway-redis
     image: gateway:latest
     container_name: gateway
     pull_policy: never 
@@ -102,12 +103,21 @@ services:
       CARS_API_URL: http://cars:8070/api/v1/cars/
       PAYMENT_API_URL: http://payment:8050/api/v1/payments/
       RENTAL_API_URL: http://rental:8060/api/v1/rentals/
+      REDIS_CONN_STRING: ${GATEWAY_REDIS_CONN_STRING}
       PORT: 8080
     restart: on-failure
     ports: 
       - "8080:8080"
 
+  gateway-redis: 
+    image: redis:7
+    container_name: gateway-redis
+    pull_policy: if_not_present
+    volumes:
+      - gateway-redis-data:/data
+
 volumes:
   cars-postgres-data:
   rental-postgres-data:
   payment-postgres-data:
+  gateway-redis-data:
