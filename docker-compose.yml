@@ -103,6 +103,7 @@ services:
       CARS_API_URL: http://cars:8070/api/v1/cars/
       PAYMENT_API_URL: http://payment:8050/api/v1/payments/
       RENTAL_API_URL: http://rental:8060/api/v1/rentals/
+      REDIS_CONN_STRING: ${GATEWAY_REDIS_CONN_STRING}
       PORT: 8080
     restart: on-failure
     ports: 

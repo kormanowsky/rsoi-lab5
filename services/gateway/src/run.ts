@@ -12,7 +12,7 @@ const
     carsApiUrl = process.env.CARS_API_URL!,
     paymentApiUrl = process.env.PAYMENT_API_URL!,
     rentalApiUrl = process.env.RENTAL_API_URL!,
-    redisUrl = process.env.REDIS_URL!,
+    redisUrl = process.env.REDIS_CONN_STRING!,
     parsedRedisUrl = new URL(redisUrl),
     noCircutBreakers = Boolean(process.env.NO_CIRCUIT_BREAKERS),
     noQueues = Boolean(process.env.NO_QUEUES);
@@ -34,15 +34,16 @@ const rentalRetrievalLogic = noCircutBreakers ?
     new RentalRetrievalLogic(rentalsLogic, rentalDereferenceLogic) : 
     new CBRentalRetrievalLogic(new CircuitBreaker(), rentalsLogic, rentalDereferenceLogic);
 
+const queue = noQueues ? null : new Queue('rsoi-lab3', {
+    redis: {
+        host: parsedRedisUrl.hostname,
+        port: parseInt(parsedRedisUrl.port, 10)
+    },
+});
+
 const rentalProcessLogic = noQueues ? 
     new RentalProcessLogic(carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic) : 
-    new RQRentalProcessLogic(new Queue('rsoi-lab3', {
-        redis: {
-            host: parsedRedisUrl.hostname,
-            port: parseInt(parsedRedisUrl.port, 10)
-        },
-    }), carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic);
-
+    new RQRentalProcessLogic(queue, carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic);
 
 const server = new GatewayServer(
     carsRetrievalLogic, 
@@ -51,4 +52,8 @@ const server = new GatewayServer(
     port
 );
 
-server.start();
+if (noQueues) {
+    server.start();
+} else {
+    queue.on('ready', () => server.start());
+}
