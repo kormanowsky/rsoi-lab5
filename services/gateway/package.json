@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "@rsoi-lab2/library": "file:../../library",
+    "bee-queue": "^1.7.1",
     "tsx": "4.19.1"
   },
   "devDependencies": {
