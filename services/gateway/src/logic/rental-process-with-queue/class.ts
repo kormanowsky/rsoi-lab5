@@ -14,7 +14,7 @@ import { RentalDereferenceUidsLogic } from "../rental-retrieval";
 
 import { Queue, QueueJob } from "./interface";
 
-export const maxQueueJobKeepAliveMs = 20_000;
+export const maxQueueJobKeepAliveMs = 10_000;
 
 export class RQRentalProcessLogic extends RentalProcessLogic {
     constructor(
@@ -92,14 +92,10 @@ export class RQRentalProcessLogic extends RentalProcessLogic {
             return;
         }
 
-        await new Promise((resolve) => setTimeout(resolve, this.jobKeepAliveMs / 10));
-
-        let result: {error: boolean};
-
         if (type === 'CANCEL_RENTAL') {
-            result = await this.cancelRentalOrQueueRetry(payload, createdAt);
+            await this.cancelRentalOrQueueRetry(payload, createdAt);
         } else if (type === 'FINISH_RENTAL') {
-            result = await this.finishRentalOrQueueRetry(payload, createdAt);
+            await this.finishRentalOrQueueRetry(payload, createdAt);
         }
     }
 
