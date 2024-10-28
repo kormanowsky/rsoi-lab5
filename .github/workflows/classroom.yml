@@ -64,10 +64,6 @@ jobs:
           VARIANT: v3
           SERVICE_NAME: payment
           PORT_NUMBER: 8050
-        continue-on-error: true
-
-      - name: Show Logs
-        run: docker compose logs 
 
       - uses: education/autograding@v1
         id: autograder
