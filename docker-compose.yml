@@ -92,6 +92,7 @@ services:
       - cars
       - rental
       - payment
+      - gateway-redis
     image: gateway:latest
     container_name: gateway
     pull_policy: never 
@@ -107,7 +108,15 @@ services:
     ports: 
       - "8080:8080"
 
+  gateway-redis: 
+    image: redis:7
+    container_name: gateway-redis
+    pull_policy: if_not_present
+    volumes:
+      - gateway-redis-data:/data
+
 volumes:
   cars-postgres-data:
   rental-postgres-data:
   payment-postgres-data:
+  gateway-redis-data:
