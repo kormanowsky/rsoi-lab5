@@ -1,7 +1,11 @@
 name: GitHub Classroom Workflow
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 jobs:
   build:
     name: Autograding
@@ -11,28 +15,56 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Prepare Library For Tests
+        run: cd library && npm ci
+
+      - name: Run Cars Unit Tests 
+        run: cd services/cars && npm ci && npm run test
+      
+      - name: Run Payment Unit Tests 
+        run: cd services/payment && npm ci && npm run test
+      
+      - name: Run Rental Unit Tests 
+        run: cd services/rental && npm ci && npm run test
+
+      - name: Run Gateway Unit Tests 
+        run: cd services/gateway && npm ci && npm run test
+
       - uses: docker/setup-buildx-action@v2
 
-      # TODO build, publish to docker hub, deploy to k8s
+      - name: Build images
+        timeout-minutes: 10
+        run: docker compose build
+
+    # - name: Run containers
+    #   timeout-minutes: 5
+    #   run: |
+    #     docker compose up -d
+    #     ./scripts/wait-script.sh
+    #   env:
+    #     CARS_POSTGRES_USER: ${{secrets.CARS_POSTGRES_USER}}
+    #     CARS_POSTGRES_PASSWORD: ${{secrets.CARS_POSTGRES_PASSWORD}}
+    #     CARS_POSTGRES_DB: ${{secrets.CARS_POSTGRES_DB}}
+    #     CARS_STORAGE_CONN_STRING: ${{secrets.CARS_STORAGE_CONN_STRING}}
+    #     PAYMENT_POSTGRES_USER: ${{secrets.PAYMENT_POSTGRES_USER}}
+    #     PAYMENT_POSTGRES_PASSWORD: ${{secrets.PAYMENT_POSTGRES_PASSWORD}}
+    #     PAYMENT_POSTGRES_DB: ${{secrets.PAYMENT_POSTGRES_DB}}
+    #     PAYMENT_STORAGE_CONN_STRING: ${{secrets.PAYMENT_STORAGE_CONN_STRING}}
+    #     RENTAL_POSTGRES_USER: ${{secrets.RENTAL_POSTGRES_USER}}
+    #     RENTAL_POSTGRES_PASSWORD: ${{secrets.RENTAL_POSTGRES_PASSWORD}}
+    #     RENTAL_POSTGRES_DB: ${{secrets.RENTAL_POSTGRES_DB}}
+    #     RENTAL_STORAGE_CONN_STRING: ${{secrets.RENTAL_STORAGE_CONN_STRING}}
+    #     GATEWAY_REDIS_CONN_STRING: ${{secrets.GATEWAY_REDIS_CONN_STRING}}
+    #     WAIT_PORTS: 8080,8070,8060,8050
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master
         with:
-          collection: <variant>/postman/collection.json
-          environment: <variant>/postman/environment.json
+          collection: v3/postman/collection.json
+          environment: v3/postman/environment.json
           delayRequest: 100
           reporters: '[ "cli" ]'
 
       - uses: education/autograding@v1
         id: autograder
         continue-on-error: true
-
-      - name: Github auto grader mark
-        uses: Romanow/google-sheet-autograder-marker@v1.0
-        with:
-          google_token: ${{secrets.GOOGLE_API_KEY}}
-          sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
-          homework_number: 4
-          user_column: 'D'
-          column_offset: 'F'
-          mark: "'+"
