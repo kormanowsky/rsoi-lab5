@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}-deployment
+  labels:
+    appName: {{ .Values.appName }} 
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      appName: {{ .Values.appName }} 
+  template:
+    metadata:
+      labels:
+        appName: {{ .Values.appName }} 
+    spec:
+      containers:
+        - name: {{ .Values.appName }}
+          image: {{ .Values.appImage }}
+          ports:
+          - containerPort: {{ .Values.appPort }}
+          env:
+          {{- if .Values.hasPostgresql }}
+          - name: POSTGRES_CONN_STRING
+            valueFrom: 
+              secretKeyRef: 
+                name: {{ .Values.appName }}-postgresql-conn-string
+                key: conn-string
+          {{- end}}
+          {{- if .Values.hasRedis }}
+          - name: REDIS_CONN_STRING
+            valueFrom: 
+              secretKeyRef: 
+                name: {{ .Values.appName }}-redis-conn-string
+                key: conn-string
+          {{- end}}
+          {{- range $k, $v := .Values.appEnv }}
+          - name: {{ $k }}
+            value: {{ $v }}
+          {{- end }}
+      imagePullSecrets:
+        - name: {{ .Values.registryCredSecret }}

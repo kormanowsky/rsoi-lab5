@@ -13,7 +13,6 @@ const
     paymentApiUrl = process.env.PAYMENT_API_URL!,
     rentalApiUrl = process.env.RENTAL_API_URL!,
     redisUrl = process.env.REDIS_CONN_STRING!,
-    parsedRedisUrl = new URL(redisUrl),
     noCircutBreakers = Boolean(process.env.NO_CIRCUIT_BREAKERS),
     noQueues = Boolean(process.env.NO_QUEUES);
 
@@ -36,8 +35,7 @@ const rentalRetrievalLogic = noCircutBreakers ?
 
 const queue = noQueues ? null : new Queue('rsoi-lab3', {
     redis: {
-        host: parsedRedisUrl.hostname,
-        port: parseInt(parsedRedisUrl.port, 10)
+        url: redisUrl
     },
 });
 

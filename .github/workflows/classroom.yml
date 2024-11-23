@@ -7,8 +7,8 @@ on:
     branches:
       - master
 jobs:
-  build:
-    name: Autograding
+  unit_tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -30,32 +30,192 @@ jobs:
       - name: Run Gateway Unit Tests 
         run: cd services/gateway && npm ci && npm run test
 
+  images: 
+    name: Build And Publish Images 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - uses: docker/setup-buildx-action@v2
 
-      - name: Build images
-        timeout-minutes: 10
-        run: docker compose build
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    # - name: Run containers
-    #   timeout-minutes: 5
-    #   run: |
-    #     docker compose up -d
-    #     ./scripts/wait-script.sh
-    #   env:
-    #     CARS_POSTGRES_USER: ${{secrets.CARS_POSTGRES_USER}}
-    #     CARS_POSTGRES_PASSWORD: ${{secrets.CARS_POSTGRES_PASSWORD}}
-    #     CARS_POSTGRES_DB: ${{secrets.CARS_POSTGRES_DB}}
-    #     CARS_STORAGE_CONN_STRING: ${{secrets.CARS_STORAGE_CONN_STRING}}
-    #     PAYMENT_POSTGRES_USER: ${{secrets.PAYMENT_POSTGRES_USER}}
-    #     PAYMENT_POSTGRES_PASSWORD: ${{secrets.PAYMENT_POSTGRES_PASSWORD}}
-    #     PAYMENT_POSTGRES_DB: ${{secrets.PAYMENT_POSTGRES_DB}}
-    #     PAYMENT_STORAGE_CONN_STRING: ${{secrets.PAYMENT_STORAGE_CONN_STRING}}
-    #     RENTAL_POSTGRES_USER: ${{secrets.RENTAL_POSTGRES_USER}}
-    #     RENTAL_POSTGRES_PASSWORD: ${{secrets.RENTAL_POSTGRES_PASSWORD}}
-    #     RENTAL_POSTGRES_DB: ${{secrets.RENTAL_POSTGRES_DB}}
-    #     RENTAL_STORAGE_CONN_STRING: ${{secrets.RENTAL_STORAGE_CONN_STRING}}
-    #     GATEWAY_REDIS_CONN_STRING: ${{secrets.GATEWAY_REDIS_CONN_STRING}}
-    #     WAIT_PORTS: 8080,8070,8060,8050
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+      - name: Build, tag, and push images to Yandex Cloud Container Registry
+        env:
+          CR_REGISTRY: ${{ vars.YC_CR_REGISTRY }}
+          CR_REPOSITORY: ${{ vars.YC_CR_REPOSITORY }}
+          IMAGE_TAG: v.${{ github.sha }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          docker compose build && docker compose push 
+          test "$REF_NAME" = "master" && (IMAGE_TAG=stable docker compose build && IMAGE_TAG=stable docker compose push) || true
+
+  deploy: 
+    needs: [images]
+    name: Deploy 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Yandex Cloud CLI
+        run: |
+          curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i /opt/yandex-cloud -n
+          ln -s /opt/yandex-cloud/bin/yc /usr/local/bin/yc
+
+      - name: Login To Yandex Cloud CLI 
+        run: >
+          echo '${{ secrets.YC_SA_JSON_CREDENTIALS }}' > key.json && yc config set service-account-key key.json && rm -f key.json
+      
+      - name: Get Managed Kubernetes Cluster Credentials 
+        env: 
+          MANAGED_K8S_CLUSTER: ${{ vars.YC_MANAGED_K8S_CLUSTER }}
+        run: |
+          yc managed-kubernetes cluster get-credentials $MANAGED_K8S_CLUSTER --external --kubeconfig k8s/.kubeconfig
+      
+      - name: Deploy To Managed Kubernetes Cluster
+        id: deploy_to_k8s_cluster
+        env: 
+          CR_REGISTRY: ${{ vars.YC_CR_REGISTRY }}
+          CR_REPOSITORY: ${{ vars.YC_CR_REPOSITORY }}
+          IMAGE_TAG: v.${{ github.sha }}
+          DOCKER_USERNAME: ${{ secrets.YC_DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.YC_DOCKER_PASSWORD }}
+          REINSTALL_DB: ${{ vars.REINSTALL_DB }}
+        run: | 
+          cd k8s
+          kubectl proxy --port 8080 --kubeconfig .kubeconfig &
+
+          kubectl delete secret regcred --kubeconfig .kubeconfig || true
+          kubectl create secret docker-registry regcred \
+            --docker-server="cr.yandex" \
+            --docker-username="$DOCKER_USERNAME" \
+            --docker-password="$DOCKER_PASSWORD" \
+            --kubeconfig .kubeconfig
+
+          kubectl delete secret cars-postgresql-conn-string --kubeconfig .kubeconfig || true
+          kubectl create secret generic cars-postgresql-conn-string \
+            --from-literal=conn-string="${{ secrets.CARS_POSTGRES_CONN_STRING }}" \
+            --kubeconfig .kubeconfig
+
+          kubectl delete secret payment-postgresql-conn-string --kubeconfig .kubeconfig || true
+          kubectl create secret generic payment-postgresql-conn-string \
+            --from-literal=conn-string="${{ secrets.PAYMENT_POSTGRES_CONN_STRING }}" \
+            --kubeconfig .kubeconfig
+
+          kubectl delete secret rental-postgresql-conn-string --kubeconfig .kubeconfig || true
+          kubectl create secret generic rental-postgresql-conn-string \
+            --from-literal=conn-string="${{ secrets.RENTAL_POSTGRES_CONN_STRING }}" \
+            --kubeconfig .kubeconfig
+
+          kubectl delete secret gateway-redis-conn-string --kubeconfig .kubeconfig || true
+          kubectl create secret generic gateway-redis-conn-string \
+            --from-literal=conn-string="${{ secrets.GATEWAY_REDIS_CONN_STRING }}" \
+            --kubeconfig .kubeconfig
+
+          helm pull oci://cr.yandex/yc-marketplace/yandex-cloud/ingress-nginx/chart/ingress-nginx \
+            --version 4.10.0 \
+            --untar
+
+          helm pull oci://registry-1.docker.io/bitnamicharts/postgresql \
+            --version 16.2.1 \
+            --untar
+
+          helm pull oci://registry-1.docker.io/bitnamicharts/redis \
+            --version 20.3.0 \
+            --untar
+
+          test -n "$REINSTALL_DB" && (helm upgrade \
+            --install --atomic --wait --force \
+            -f values.cars-postgresql.yaml \
+            --kubeconfig .kubeconfig \
+            cars-postgresql ./postgresql) || true
+
+          test -n "$REINSTALL_DB" && (helm upgrade \
+            --install --atomic --wait --force \
+            -f values.rental-postgresql.yaml \
+            --kubeconfig .kubeconfig \
+            rental-postgresql ./postgresql) || true
+
+          test -n "$REINSTALL_DB" && (helm upgrade \
+            --install --atomic --wait --force \
+            -f values.payment-postgresql.yaml \
+            --kubeconfig .kubeconfig \
+            payment-postgresql ./postgresql) || true
+
+          test -n "$REINSTALL_DB" && (helm upgrade \
+            --install --atomic --wait --force \
+            --kubeconfig .kubeconfig \
+            gateway-redis ./redis) || true
+
+          helm upgrade \
+            --install --atomic --wait --force \
+            -f values.cars.yaml \
+            --set appImage="cr.yandex/$CR_REGISTRY/$CR_REPOSITORY-cars:$IMAGE_TAG" \
+            --kubeconfig .kubeconfig \
+            cars ./rsoi-lab4-app
+
+          helm upgrade \
+            --install --atomic --wait --force \
+            -f values.rental.yaml \
+            --set appImage="cr.yandex/$CR_REGISTRY/$CR_REPOSITORY-rental:$IMAGE_TAG" \
+            --kubeconfig .kubeconfig \
+            rental ./rsoi-lab4-app
+
+          helm upgrade \
+            --install --atomic --wait --force \
+            -f values.payment.yaml \
+            --set appImage="cr.yandex/$CR_REGISTRY/$CR_REPOSITORY-payment:$IMAGE_TAG" \
+            --kubeconfig .kubeconfig \
+            payment ./rsoi-lab4-app
+
+          helm upgrade \
+            --install --atomic --wait --force \
+            -f values.gateway.yaml \
+            --set appImage="cr.yandex/$CR_REGISTRY/$CR_REPOSITORY-gateway:$IMAGE_TAG" \
+            --kubeconfig .kubeconfig \
+            gateway ./rsoi-lab4-app
+
+          helm upgrade \
+            --install --atomic --wait --force \
+            --kubeconfig .kubeconfig \
+            ingress-nginx ./ingress-nginx
+
+          helm upgrade \
+            --install --atomic --wait --force \
+            --kubeconfig .kubeconfig \
+            rsoi-lab4-ingress ./rsoi-lab4-ingress
+
+          echo "PUBLIC_URL=http://$(kubectl get services ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> "$GITHUB_OUTPUT"
+    outputs: 
+      PUBLIC_URL: ${{ steps.deploy_to_k8s_cluster.outputs.PUBLIC_URL }}
+
+  api_tests:
+    needs: [deploy]
+    name: API Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Prepare API Tests
+        run: |
+          cd v3/postman
+          echo '[{ "key": "baseUrl", "value": "${{ needs.deploy.outputs.PUBLIC_URL }}" }]' > environment.json
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master

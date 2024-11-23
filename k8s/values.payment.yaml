@@ -1,0 +1,4 @@
+appName: "payment"
+appEnv: 
+  CONN_STRING: "$(POSTGRES_CONN_STRING)"
+hasPostgresql: true
