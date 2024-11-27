@@ -15,7 +15,7 @@ const
     redisUrl = process.env.REDIS_CONN_STRING!,
     noCircutBreakers = Boolean(process.env.NO_CIRCUIT_BREAKERS),
     noQueues = Boolean(process.env.NO_QUEUES),
-    noOauth = Boolean(process.env.NO_OAUTH),
+    noOauth = Boolean(process.env.NO_OAUTH);
 
 const 
     carsClient = new CarsClient(carsApiUrl),
@@ -49,7 +49,7 @@ const authMiddleware = noOauth ?
     // TODO: middleware с oauth
     {
         action: (req, res, next) => next()
-    }
+    };
 
 const server = new GatewayServer(
     carsRetrievalLogic, 
