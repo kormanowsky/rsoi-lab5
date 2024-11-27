@@ -106,37 +106,37 @@ jobs:
             --docker-password="$DOCKER_PASSWORD" \
             --kubeconfig .kubeconfig
 
-          kubectl delete secret cars-postgresql-conn-string --kubeconfig .kubeconfig || true
-          kubectl create secret generic cars-postgresql-conn-string \
+          test -n "$REINSTALL_DB" && (kubectl delete secret cars-postgresql-conn-string --kubeconfig .kubeconfig || true) || true
+          test -n "$REINSTALL_DB" && (kubectl create secret generic cars-postgresql-conn-string \
             --from-literal=conn-string="${{ secrets.CARS_POSTGRES_CONN_STRING }}" \
-            --kubeconfig .kubeconfig
+            --kubeconfig .kubeconfig) || true
 
-          kubectl delete secret payment-postgresql-conn-string --kubeconfig .kubeconfig || true
-          kubectl create secret generic payment-postgresql-conn-string \
+          test -n "$REINSTALL_DB" && (kubectl delete secret payment-postgresql-conn-string --kubeconfig .kubeconfig || true) || true
+          test -n "$REINSTALL_DB" && (kubectl create secret generic payment-postgresql-conn-string \
             --from-literal=conn-string="${{ secrets.PAYMENT_POSTGRES_CONN_STRING }}" \
-            --kubeconfig .kubeconfig
+            --kubeconfig .kubeconfig) || true
 
-          kubectl delete secret rental-postgresql-conn-string --kubeconfig .kubeconfig || true
-          kubectl create secret generic rental-postgresql-conn-string \
+          test -n "$REINSTALL_DB" && (kubectl delete secret rental-postgresql-conn-string --kubeconfig .kubeconfig || true) || true
+          test -n "$REINSTALL_DB" && (kubectl create secret generic rental-postgresql-conn-string \
             --from-literal=conn-string="${{ secrets.RENTAL_POSTGRES_CONN_STRING }}" \
-            --kubeconfig .kubeconfig
+            --kubeconfig .kubeconfig) || true
 
-          kubectl delete secret gateway-redis-conn-string --kubeconfig .kubeconfig || true
-          kubectl create secret generic gateway-redis-conn-string \
+          test -n "$REINSTALL_DB" && (kubectl delete secret gateway-redis-conn-string --kubeconfig .kubeconfig) || true
+          test -n "$REINSTALL_DB" && (kubectl create secret generic gateway-redis-conn-string \
             --from-literal=conn-string="${{ secrets.GATEWAY_REDIS_CONN_STRING }}" \
-            --kubeconfig .kubeconfig
+            --kubeconfig .kubeconfig) || true
 
           helm pull oci://cr.yandex/yc-marketplace/yandex-cloud/ingress-nginx/chart/ingress-nginx \
             --version 4.10.0 \
             --untar
 
-          helm pull oci://registry-1.docker.io/bitnamicharts/postgresql \
+          test -n "$REINSTALL_DB" && (helm pull oci://registry-1.docker.io/bitnamicharts/postgresql \
             --version 16.2.1 \
-            --untar
+            --untar) || true 
 
-          helm pull oci://registry-1.docker.io/bitnamicharts/redis \
+          test -n "$REINSTALL_DB" && (helm pull oci://registry-1.docker.io/bitnamicharts/redis \
             --version 20.3.0 \
-            --untar
+            --untar) || true
 
           test -n "$REINSTALL_DB" && (helm upgrade \
             --install --atomic --wait --force \
