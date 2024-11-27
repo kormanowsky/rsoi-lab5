@@ -104,6 +104,7 @@ jobs:
             --kubeconfig .kubeconfig
 
       - name: Deploy Identity Provider to Managed Kubernetes Cluster 
+        if: ${{ vars.REINSTALL_KC }}
         run: |
           cd k8s 
           
