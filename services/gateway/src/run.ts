@@ -1,4 +1,4 @@
-import { CircuitBreaker } from '@rsoi-lab2/library';
+import { CircuitBreaker, AuthUsernameHeaderMiddleware } from '@rsoi-lab2/library';
 import { CarsClient, PaymentsClient, RentalsClient } from './client';
 import { CarsLogic, PaymentsLogic, RentalsLogic, RentalRetrievalLogic, RentalDereferenceUidsLogic, RentalProcessLogic, CarsRetrievalLogic } from './logic';
 import { CBCarsRetrievalLogic } from './logic/cars-retrieval-with-circuit-breaker/class';
@@ -14,7 +14,8 @@ const
     rentalApiUrl = process.env.RENTAL_API_URL!,
     redisUrl = process.env.REDIS_CONN_STRING!,
     noCircutBreakers = Boolean(process.env.NO_CIRCUIT_BREAKERS),
-    noQueues = Boolean(process.env.NO_QUEUES);
+    noQueues = Boolean(process.env.NO_QUEUES),
+    noOauth = Boolean(process.env.NO_OAUTH),
 
 const 
     carsClient = new CarsClient(carsApiUrl),
@@ -43,10 +44,18 @@ const rentalProcessLogic = noQueues ?
     new RentalProcessLogic(carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic) : 
     new RQRentalProcessLogic(queue, carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic);
 
+const authMiddleware = noOauth ? 
+    new AuthUsernameHeaderMiddleware() : 
+    // TODO: middleware с oauth
+    {
+        action: (req, res, next) => next()
+    }
+
 const server = new GatewayServer(
     carsRetrievalLogic, 
     rentalRetrievalLogic, 
     rentalProcessLogic,
+    authMiddleware,
     port
 );
 

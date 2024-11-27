@@ -1,4 +1,4 @@
-import { Server, ServerRequest, ServerResponse, Car, Rental, EntityLogic, CarFilter, CarId } from '@rsoi-lab2/library';
+import { Server, ServerRequest, ServerResponse, Car, Rental, EntityLogic, CarFilter, CarId, Middleware } from '@rsoi-lab2/library';
 import { CarsRetrievalLogic, RentalProcessLogic, RentalRetrievalLogic, RetrievedRental } from '../logic';
 
 type RentalServerResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
@@ -11,22 +11,24 @@ export class GatewayServer extends Server {
         carsRetrievalLogic: CarsRetrievalLogic,
         rentalRetrievalLogic: RentalRetrievalLogic,
         rentalProcessLogic: RentalProcessLogic,
+        authMiddleware: Middleware,
         port: number
     ) {
         super(port);
         this.carsRetrievalLogic = carsRetrievalLogic;
         this.rentalRetrievalLogic = rentalRetrievalLogic;
         this.rentalProcessLogic = rentalProcessLogic;
+        this.authMiddlewareFunction = authMiddleware.action.bind(authMiddleware);
     }
 
     protected initRoutes(): void {
         this.getServer()
             .get('/api/v1/cars', this.getCars.bind(this))
-            .get('/api/v1/rental', this.getRentals.bind(this))
-            .get('/api/v1/rental/:id', this.getRental.bind(this))
-            .post('/api/v1/rental', this.startRental.bind(this))
-            .post('/api/v1/rental/:id/finish', this.finishRental.bind(this))
-            .delete('/api/v1/rental/:id', this.cancelRental.bind(this));
+            .get('/api/v1/rental', this.authMiddlewareFunction, this.getRentals.bind(this))
+            .get('/api/v1/rental/:id', this.authMiddlewareFunction, this.getRental.bind(this))
+            .post('/api/v1/rental', this.authMiddlewareFunction, this.startRental.bind(this))
+            .post('/api/v1/rental/:id/finish', this.authMiddlewareFunction, this.finishRental.bind(this))
+            .delete('/api/v1/rental/:id', this.authMiddlewareFunction, this.cancelRental.bind(this));
     }
 
     protected getCars(req: ServerRequest, res: ServerResponse): void {
@@ -42,15 +44,7 @@ export class GatewayServer extends Server {
     }
 
     protected getRentals(req: ServerRequest, res: ServerResponse): void {
-        let username: string;
-
-        try {
-            username = this.parseUsername(req.headers['x-user-name']);
-        } catch (err) {
-            res.status(401).send({message: 'Authentication failure'});
-            console.log(err);
-            return;
-        }
+        const username: string = req.body.auth;
 
         this.rentalRetrievalLogic
             .retrieveRentals({username})
@@ -63,16 +57,6 @@ export class GatewayServer extends Server {
     }
 
     protected async getRental(req: ServerRequest, res: ServerResponse): Promise<void> {
-        let username: string;
-
-        try {
-            username = this.parseUsername(req.headers['x-user-name']);
-        } catch (err) {
-            res.status(401).send({message: 'Authentication failure'});
-            console.log(err);
-            return;
-        }
-
         let rentalUid: Rental['rentalUid'];
 
         try {
@@ -82,6 +66,8 @@ export class GatewayServer extends Server {
             console.error(err);
             return;
         }
+
+        const username: string = req.body.auth;
 
         try {
 
@@ -101,16 +87,6 @@ export class GatewayServer extends Server {
     }
 
     protected async startRental(req: ServerRequest, res: ServerResponse): Promise<void> {
-        let username: string;
-
-        try {
-            username = this.parseUsername(req.headers['x-user-name']);
-        } catch (err) {
-            res.status(401).send({message: 'Authentication failure'});
-            console.log(err);
-            return;
-        }
-
         let rentalServerRequest: Pick<Rental, 'dateFrom' | 'dateTo' | 'carUid'>;
 
         try {
@@ -120,6 +96,8 @@ export class GatewayServer extends Server {
             console.error(err);
             return;
         }
+
+        const username: string = req.body.auth;
 
         const response = await this.rentalProcessLogic.startRental({
             ...rentalServerRequest, 
@@ -134,16 +112,6 @@ export class GatewayServer extends Server {
     }
 
     protected async finishRental(req: ServerRequest, res: ServerResponse): Promise<void> {
-        let username: string;
-
-        try {
-            username = this.parseUsername(req.headers['x-user-name']);
-        } catch (err) {
-            res.status(401).send({message: 'Authentication failure'});
-            console.log(err);
-            return;
-        }
-
         let rentalUid: Rental['rentalUid'];
 
         try {
@@ -153,6 +121,8 @@ export class GatewayServer extends Server {
             console.error(err);
             return;
         }
+
+        const username: string = req.body.auth;
 
         const response = await this.rentalProcessLogic.finishRental({
             rentalUid, 
@@ -167,16 +137,6 @@ export class GatewayServer extends Server {
     }
 
     protected async cancelRental(req: ServerRequest, res: ServerResponse): Promise<void> {
-        let username: string;
-
-        try {
-            username = this.parseUsername(req.headers['x-user-name']);
-        } catch (err) {
-            res.status(401).send({message: 'Authentication failure'});
-            console.log(err);
-            return;
-        }
-
         let rentalUid: Rental['rentalUid'];
 
         try {
@@ -186,6 +146,8 @@ export class GatewayServer extends Server {
             console.error(err);
             return;
         }
+
+        const username: string = req.body.auth;
 
         const response = await this.rentalProcessLogic.cancelRental({
             rentalUid, 
@@ -197,14 +159,6 @@ export class GatewayServer extends Server {
         } else {
             res.status(204).send();
         }
-    }
-
-    protected parseUsername(value: unknown): string {
-        if (typeof value !== 'string' || value.length === 0) {
-            throw new Error('Incorrect username');
-        }
-
-        return value;
     }
 
     protected parseId(value: unknown): string {
@@ -285,4 +239,5 @@ export class GatewayServer extends Server {
     private carsRetrievalLogic: CarsRetrievalLogic;
     private rentalRetrievalLogic: RentalRetrievalLogic;
     private rentalProcessLogic: RentalProcessLogic;
+    private authMiddlewareFunction: (req: ServerRequest, res: ServerResponse, next: () => void) => void;
 }
