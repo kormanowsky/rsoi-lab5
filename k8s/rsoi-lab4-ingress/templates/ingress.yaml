@@ -12,8 +12,7 @@ spec:
         pathType: Prefix
         backend: 
           service:
-            name: {{ .Values.service }}
+            name: {{ $v.service }}
             port:
-              number: {{ .Values.port }}
-        value: {{ $v }}
+              number: {{ $v.port }}
       {{- end }}
