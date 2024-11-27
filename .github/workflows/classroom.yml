@@ -86,19 +86,16 @@ jobs:
         run: |
           yc managed-kubernetes cluster get-credentials $MANAGED_K8S_CLUSTER --external --kubeconfig k8s/.kubeconfig
       
-      - name: Deploy To Managed Kubernetes Cluster
-        id: deploy_to_k8s_cluster
+      - name: Start Kubectl Proxy
+        run: |
+          kubectl proxy --port 8080 --kubeconfig k8s/.kubeconfig &
+
+      - name: Login To Yandex Cloud Docker Registry from Kubectl 
         env: 
-          CR_REGISTRY: ${{ vars.YC_CR_REGISTRY }}
-          CR_REPOSITORY: ${{ vars.YC_CR_REPOSITORY }}
-          IMAGE_TAG: v.${{ github.sha }}
           DOCKER_USERNAME: ${{ secrets.YC_DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.YC_DOCKER_PASSWORD }}
-          REINSTALL_DB: ${{ vars.REINSTALL_DB }}
-        run: | 
+        run: |
           cd k8s
-          kubectl proxy --port 8080 --kubeconfig .kubeconfig &
-
           kubectl delete secret regcred --kubeconfig .kubeconfig || true
           kubectl create secret docker-registry regcred \
             --docker-server="cr.yandex" \
@@ -106,64 +103,74 @@ jobs:
             --docker-password="$DOCKER_PASSWORD" \
             --kubeconfig .kubeconfig
 
+      - name: Deploy DB To Managed Kubernetes Cluster
+        if: ${{ vars.REINSTALL_DB }}
+        run: |
+          cd k8s
+
+          helm pull oci://registry-1.docker.io/bitnamicharts/postgresql \
+          --version 16.2.1 \
+          --untar
+
+          helm pull oci://registry-1.docker.io/bitnamicharts/redis \
+          --version 20.3.0 \
+          --untar
+
+          helm upgrade \
+          --install --atomic --wait --force \
+          -f values.cars-postgresql.yaml \
+          --kubeconfig .kubeconfig \
+          cars-postgresql ./postgresql
+
+          helm upgrade \
+          --install --atomic --wait --force \
+          -f values.rental-postgresql.yaml \
+          --kubeconfig .kubeconfig \
+          rental-postgresql ./postgresql
+
+          helm upgrade \
+          --install --atomic --wait --force \
+          -f values.payment-postgresql.yaml \
+          --kubeconfig .kubeconfig \
+          payment-postgresql ./postgresql
+
+          helm upgrade \
+          --install --atomic --wait --force \
+          --kubeconfig .kubeconfig \
+          gateway-redis ./redis
+
+          kubectl delete secret cars-postgresql-conn-string --kubeconfig .kubeconfig || true \
+          kubectl create secret generic cars-postgresql-conn-string \
+          --from-literal=conn-string="${{ secrets.CARS_POSTGRES_CONN_STRING }}" \
+          --kubeconfig .kubeconfig
+
+          kubectl delete secret payment-postgresql-conn-string --kubeconfig .kubeconfig || true \
+          kubectl create secret generic payment-postgresql-conn-string \
+          --from-literal=conn-string="${{ secrets.PAYMENT_POSTGRES_CONN_STRING }}" \
+          --kubeconfig .kubeconfig
+
+          kubectl delete secret rental-postgresql-conn-string --kubeconfig .kubeconfig || true \
+          kubectl create secret generic rental-postgresql-conn-string \
+          --from-literal=conn-string="${{ secrets.RENTAL_POSTGRES_CONN_STRING }}" \
+          --kubeconfig .kubeconfig
+
+          kubectl delete secret gateway-redis-conn-string --kubeconfig .kubeconfig || true \
+          kubectl create secret generic gateway-redis-conn-string \
+          --from-literal=conn-string="${{ secrets.GATEWAY_REDIS_CONN_STRING }}" \
+          --kubeconfig .kubeconfig
+      
+      - name: Deploy App To Managed Kubernetes Cluster
+        id: deploy_to_k8s_cluster
+        env: 
+          CR_REGISTRY: ${{ vars.YC_CR_REGISTRY }}
+          CR_REPOSITORY: ${{ vars.YC_CR_REPOSITORY }}
+          IMAGE_TAG: v.${{ github.sha }}
+        run: |
+          cd k8s
+
           helm pull oci://cr.yandex/yc-marketplace/yandex-cloud/ingress-nginx/chart/ingress-nginx \
             --version 4.10.0 \
             --untar
-
-          test -n "$REINSTALL_DB" && (
-            helm uninstall --ignore-not-found cars-postgresql payment-postgresql rental-postgresql || true \
-            \
-            helm pull oci://registry-1.docker.io/bitnamicharts/postgresql \
-            --version 16.2.1 \
-            --untar \
-            \
-            helm pull oci://registry-1.docker.io/bitnamicharts/redis \
-            --version 20.3.0 \
-            --untar \
-            \
-            helm upgrade \
-            --install --atomic --wait --force \
-            -f values.cars-postgresql.yaml \
-            --kubeconfig .kubeconfig \
-            cars-postgresql ./postgresql \
-            \
-            helm upgrade \
-            --install --atomic --wait --force \
-            -f values.rental-postgresql.yaml \
-            --kubeconfig .kubeconfig \
-            rental-postgresql ./postgresql \
-            \
-            helm upgrade \
-            --install --atomic --wait --force \
-            -f values.payment-postgresql.yaml \
-            --kubeconfig .kubeconfig \
-            payment-postgresql ./postgresql \
-            \
-            helm upgrade \
-            --install --atomic --wait --force \
-            --kubeconfig .kubeconfig \
-            gateway-redis ./redis \
-            \
-            kubectl delete secret cars-postgresql-conn-string --kubeconfig .kubeconfig || true \
-            kubectl create secret generic cars-postgresql-conn-string \
-            --from-literal=conn-string="${{ secrets.CARS_POSTGRES_CONN_STRING }}" \
-            --kubeconfig .kubeconfig \
-            \
-            kubectl delete secret payment-postgresql-conn-string --kubeconfig .kubeconfig || true \
-            kubectl create secret generic payment-postgresql-conn-string \
-            --from-literal=conn-string="${{ secrets.PAYMENT_POSTGRES_CONN_STRING }}" \
-            --kubeconfig .kubeconfig \
-            \
-            kubectl delete secret rental-postgresql-conn-string --kubeconfig .kubeconfig || true \
-            kubectl create secret generic rental-postgresql-conn-string \
-            --from-literal=conn-string="${{ secrets.RENTAL_POSTGRES_CONN_STRING }}" \
-            --kubeconfig .kubeconfig \
-            \
-            kubectl delete secret gateway-redis-conn-string --kubeconfig .kubeconfig || true \
-            kubectl create secret generic gateway-redis-conn-string \
-            --from-literal=conn-string="${{ secrets.GATEWAY_REDIS_CONN_STRING }}" \
-            --kubeconfig .kubeconfig \
-          ) || true
 
           helm upgrade \
             --install --atomic --wait --force \
