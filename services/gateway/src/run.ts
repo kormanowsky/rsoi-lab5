@@ -44,15 +44,15 @@ const rentalProcessLogic = noQueues ?
     new RentalProcessLogic(carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic) : 
     new RQRentalProcessLogic(queue, carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic);
 
+const oauthConfig = noOauth ? null : {
+    sessionSecret: process.env.SESSION_SECRET,
+    keycloakConfig: JSON.parse(process.env.KC_CONFIG ?? '{}'),
+};
+
+
 const authMiddleware = noOauth ? 
     new AuthUsernameHeaderMiddleware() : 
-    new AuthKeycloakMiddleware({
-        'confidential-port': 80,
-        'auth-server-url': 'http://localhost:8080',
-        'ssl-required': 'external',
-        'resource': 'rsoi-lab-resource',
-        'realm': 'rsoi-lab-realm'
-    });
+    new AuthKeycloakMiddleware(oauthConfig.sessionSecret, oauthConfig.keycloakConfig);
 
 const server = new GatewayServer(
     carsRetrievalLogic, 
