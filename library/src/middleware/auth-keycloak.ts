@@ -6,14 +6,24 @@ import { Request, Response, NextFunction, Middleware, RequestHandler, Applicatio
 
 
 export class AuthKeycloakMiddleware extends Middleware {
-    constructor(config: Keycloak.KeycloakConfig, options?: Partial<Keycloak.KeycloakOptions>) {
+    constructor(secret: string, config: Keycloak.KeycloakConfig, options?: Partial<Keycloak.KeycloakOptions>) {
         super();
 
+        this.sessionSecret = secret;
         this.sessionStore = new session.MemoryStore();
         this.keycloak = new Keycloak({store: this.sessionStore, ...options}, config);
     }
 
     override prepareApp(app: Application): void {
+        app.use(
+            session({
+                store: this.sessionStore,
+                resave: false,
+                saveUninitialized: true,
+                secret: this.sessionSecret
+            })
+        );
+
         app.use(this.keycloak.middleware());
     }
 
@@ -46,7 +56,7 @@ export class AuthKeycloakMiddleware extends Middleware {
         return value;
     }
 
-    private headerName: string;
     private sessionStore: session.Store;
+    private sessionSecret: string;
     private keycloak: Keycloak.Keycloak;
 }
