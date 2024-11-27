@@ -1,0 +1,22 @@
+{
+  "name": "gateway",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "serve": "npx tsx ./src/run.ts",
+    "test": "npx jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@rsoi-lab2/library": "file:../../library",
+    "bee-queue": "^1.7.1",
+    "tsx": "4.19.1"
+  },
+  "devDependencies": {
+    "@types/jest": "29.5.14",
+    "jest": "29.7.0",
+    "ts-jest": "29.2.5"
+  }
+}
