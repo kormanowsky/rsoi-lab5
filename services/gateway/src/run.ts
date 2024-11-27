@@ -1,4 +1,4 @@
-import { CircuitBreaker, AuthUsernameHeaderMiddleware } from '@rsoi-lab2/library';
+import { CircuitBreaker, AuthUsernameHeaderMiddleware, AuthKeycloakMiddleware } from '@rsoi-lab2/library';
 import { CarsClient, PaymentsClient, RentalsClient } from './client';
 import { CarsLogic, PaymentsLogic, RentalsLogic, RentalRetrievalLogic, RentalDereferenceUidsLogic, RentalProcessLogic, CarsRetrievalLogic } from './logic';
 import { CBCarsRetrievalLogic } from './logic/cars-retrieval-with-circuit-breaker/class';
@@ -46,10 +46,7 @@ const rentalProcessLogic = noQueues ?
 
 const authMiddleware = noOauth ? 
     new AuthUsernameHeaderMiddleware() : 
-    // TODO: middleware с oauth
-    {
-        action: (req, res, next) => next()
-    };
+    new AuthKe
 
 const server = new GatewayServer(
     carsRetrievalLogic, 

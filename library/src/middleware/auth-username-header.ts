@@ -1,3 +1,4 @@
+import { RequestHandler } from 'express';
 import { Request, Response, NextFunction, Middleware } from './abstract';
 
 export class AuthUsernameHeaderMiddleware extends Middleware {
@@ -6,20 +7,24 @@ export class AuthUsernameHeaderMiddleware extends Middleware {
         this.headerName = headerName;
     }
 
-    protected override action(req: Request, res: Response, next: NextFunction): void {
-        let username: string;
+    override getHandlers(): RequestHandler[] {
+        const handler = (req: Request, res: Response, next: NextFunction) => {
+            let username: string;
 
-        try {
-            username = this.parseUsername(req.headers[this.headerName]);
-        } catch (err) {
-            res.status(401).send({message: 'Authentication failure'});
-            console.log(err);
-            return;
-        }
+            try {
+                username = this.parseUsername(req.headers[this.headerName]);
+            } catch (err) {
+                res.status(401).send({message: 'Authentication failure'});
+                console.log(err);
+                return;
+            }
+    
+            req.body.auth = username;
+    
+            next();
+        };
 
-        req.body.auth = username;
-
-        next();
+        return [handler];
     }
 
     protected parseUsername(value: unknown): string {

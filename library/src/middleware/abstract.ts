@@ -1,11 +1,15 @@
-import { Request, Response, NextFunction, Application } from 'express';
+import { Application, RequestHandler } from 'express';
 
-export { Request, Response, NextFunction } from 'express';
+export { Request, Response, NextFunction, Application, RequestHandler } from 'express';
 
 export abstract class Middleware {
-    useInApp(app: Application): void {
-        app.use(this.action.bind(this));
+    prepareApp(_app: Application): void {
+
     }
 
-    protected abstract action(req: Request, res: Response, next: NextFunction): void;
+    useInApp(app: Application): void {
+        app.use(this.getHandlers());
+    }
+
+    abstract getHandlers(): RequestHandler[];
 }
