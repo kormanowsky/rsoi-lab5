@@ -18,17 +18,23 @@ export class GatewayServer extends Server {
         this.carsRetrievalLogic = carsRetrievalLogic;
         this.rentalRetrievalLogic = rentalRetrievalLogic;
         this.rentalProcessLogic = rentalProcessLogic;
-        this.authMiddlewareFunction = authMiddleware.action.bind(authMiddleware);
+        this.authMiddleware = authMiddleware;
     }
 
     protected initRoutes(): void {
-        this.getServer()
+        const 
+            server = this.getServer(),
+            authHandlers = this.authMiddleware.getHandlers();
+
+        this.authMiddleware.prepareApp(server);
+
+        server
             .get('/api/v1/cars', this.getCars.bind(this))
-            .get('/api/v1/rental', this.authMiddlewareFunction, this.getRentals.bind(this))
-            .get('/api/v1/rental/:id', this.authMiddlewareFunction, this.getRental.bind(this))
-            .post('/api/v1/rental', this.authMiddlewareFunction, this.startRental.bind(this))
-            .post('/api/v1/rental/:id/finish', this.authMiddlewareFunction, this.finishRental.bind(this))
-            .delete('/api/v1/rental/:id', this.authMiddlewareFunction, this.cancelRental.bind(this));
+            .get('/api/v1/rental', authHandlers, this.getRentals.bind(this))
+            .get('/api/v1/rental/:id', authHandlers, this.getRental.bind(this))
+            .post('/api/v1/rental', authHandlers, this.startRental.bind(this))
+            .post('/api/v1/rental/:id/finish', authHandlers, this.finishRental.bind(this))
+            .delete('/api/v1/rental/:id', authHandlers, this.cancelRental.bind(this));
     }
 
     protected getCars(req: ServerRequest, res: ServerResponse): void {
@@ -239,5 +245,5 @@ export class GatewayServer extends Server {
     private carsRetrievalLogic: CarsRetrievalLogic;
     private rentalRetrievalLogic: RentalRetrievalLogic;
     private rentalProcessLogic: RentalProcessLogic;
-    private authMiddlewareFunction: (req: ServerRequest, res: ServerResponse, next: () => void) => void;
+    private authMiddleware: Middleware;
 }

@@ -46,7 +46,13 @@ const rentalProcessLogic = noQueues ?
 
 const authMiddleware = noOauth ? 
     new AuthUsernameHeaderMiddleware() : 
-    new AuthKe
+    new AuthKeycloakMiddleware({
+        'confidential-port': 80,
+        'auth-server-url': 'http://localhost:8080',
+        'ssl-required': 'external',
+        'resource': 'rsoi-lab-resource',
+        'realm': 'rsoi-lab-realm'
+    });
 
 const server = new GatewayServer(
     carsRetrievalLogic, 
