@@ -26,14 +26,26 @@ spec:
               secretKeyRef: 
                 name: {{ .Values.appName }}-postgresql-conn-string
                 key: conn-string
-          {{- end}}
+          {{- end }}
           {{- if .Values.hasRedis }}
           - name: REDIS_CONN_STRING
             valueFrom: 
               secretKeyRef: 
                 name: {{ .Values.appName }}-redis-conn-string
                 key: conn-string
-          {{- end}}
+          {{- end }}
+          {{- if .Values.hasSessions }}
+          - name: KC_CONFIG
+            valueFrom: 
+              secretKeyRef: 
+                name: {{ .Values.appName }}-session-config
+                key: kc-config
+          - name: SESSION_SECRET
+            valueFrom: 
+              secretKeyRef: 
+                name: {{ .Values.appName }}-session-config
+                key: secret
+          {{- end }}
           {{- range $k, $v := .Values.appEnv }}
           - name: {{ $k }}
             value: {{ $v }}
