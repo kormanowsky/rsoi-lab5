@@ -7,10 +7,13 @@ spec:
   rules:
   - http:
       paths:
-      - path: /
+      {{- range $k, $v := .Values.rules }}
+      - path: {{ $v.path }}
         pathType: Prefix
-        backend:
+        backend: 
           service:
-            name: {{ .Values.backendService }}
+            name: {{ .Values.service }}
             port:
-              number: {{ .Values.backendPort }}
+              number: {{ .Values.port }}
+        value: {{ $v }}
+      {{- end }}

@@ -1,3 +1,10 @@
 ingressName: "rsoi-lab4-ingress"
-backendService: "gateway-service"
-backendPort: 80
+rules: 
+  gateway: 
+    path: /api/v1
+    service: gateway-service
+    port: 80
+  keycloak: 
+    path: /kc
+    service: keycloak 
+    port: 80

@@ -103,6 +103,19 @@ jobs:
             --docker-password="$DOCKER_PASSWORD" \
             --kubeconfig .kubeconfig
 
+      - name: Deploy Identity Provider to Managed Kubernetes Cluster 
+        run: |
+          cd k8s 
+          
+          helm pull oci://registry-1.docker.io/bitnamicharts/keycloak \
+          --version 24.2.2 \
+          --untar 
+
+          helm upgrade \
+          --install --atomic --wait --force \
+          --kubeconfig .kubeconfig \
+          keycloak ./keycloak
+
       - name: Deploy DB To Managed Kubernetes Cluster
         if: ${{ vars.REINSTALL_DB }}
         run: |
