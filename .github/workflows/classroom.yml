@@ -115,6 +115,8 @@ jobs:
           helm upgrade \
           --install --atomic --wait --force \
           -f values.keycloak.yaml \
+          --set auth.adminUser=${{ secrets.KC_ADMIN_USERNAME }} \
+          --set auth.adminPassword=${{ secrets.KC_ADMIN_PASSWORD }} \
           --kubeconfig .kubeconfig \
           keycloak ./keycloak
 
