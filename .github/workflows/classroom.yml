@@ -114,6 +114,7 @@ jobs:
 
           helm upgrade \
           --install --atomic --wait --force \
+          -f values.keycloak.yaml \
           --kubeconfig .kubeconfig \
           keycloak ./keycloak
 
