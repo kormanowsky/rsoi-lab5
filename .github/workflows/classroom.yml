@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Prepare Library For Tests
-        run: cd library && npm ci
+        run: cd library && npm ci --verbose
 
       - name: Run Cars Unit Tests 
         run: cd services/cars && npm ci && npm run test
