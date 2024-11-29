@@ -9,7 +9,7 @@ on:
 jobs:
   unit_tests:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -32,7 +32,7 @@ jobs:
 
   images: 
     name: Build And Publish Images 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -65,7 +65,7 @@ jobs:
   deploy: 
     needs: [images]
     name: Deploy 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -240,7 +240,7 @@ jobs:
   api_tests:
     needs: [deploy]
     name: API Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with:
