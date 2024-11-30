@@ -178,12 +178,6 @@ jobs:
           --from-literal=conn-string="${{ secrets.GATEWAY_REDIS_CONN_STRING }}" \
           --kubeconfig .kubeconfig
 
-          kubectl delete secret gateway-session-config --kubeconfig .kubeconfig || true
-          kubectl create secret generic gateway-session-config \
-          --from-literal=kc-config="${{ secrets.KC_CONFIG }}" \
-          --from-literal=secret="${{ secrets.SESSION_SECRET }}" \
-          --kubeconfig .kubeconfig
-
       - name: Deploy App To Managed Kubernetes Cluster
         id: deploy_to_k8s_cluster
         env: 
@@ -192,6 +186,12 @@ jobs:
           IMAGE_TAG: v.${{ github.sha }}
         run: |
           cd k8s
+
+          kubectl delete secret gateway-session-config --kubeconfig .kubeconfig || true
+          kubectl create secret generic gateway-session-config \
+          --from-literal=kc-config="${{ secrets.KC_CONFIG }}" \
+          --from-literal=secret="${{ secrets.SESSION_SECRET }}" \
+          --kubeconfig .kubeconfig
 
           helm pull oci://cr.yandex/yc-marketplace/yandex-cloud/ingress-nginx/chart/ingress-nginx \
             --version 4.10.0 \
