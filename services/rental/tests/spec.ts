@@ -5,7 +5,8 @@ describe('RentalLogic', () => {
     let logic: RentalLogic;
 
     beforeEach(() => {
-        logic = new RentalLogic(new MockRentalsStorage([mockRental])).withOptions({username: mockRental.username});
+        logic = new RentalLogic(new MockRentalsStorage([mockRental]))
+            .withOptions({username: mockRental.username});
     });
 
     test('получает один Rental', async () => {
@@ -16,11 +17,11 @@ describe('RentalLogic', () => {
 
     describe('получает несколько Rental', () => {
         beforeEach(async () => {
-            const newMockRental = {...mockRental};
-
-            delete newMockRental.username;
-
             for(let i = 0; i < 5; ++i) {
+                const newMockRental = {...mockRental};
+
+                delete newMockRental.username;
+
                 await logic.create(newMockRental);
             }
         });

@@ -72,9 +72,7 @@ export class RentalLogic implements
 
         this.validateEntity(entity);
 
-        entity.username = this.options.username;
-
-        return this.storage.create(entity);
+        return this.storage.create({...entity, username: this.options.username});
     }
 
     async update(id: RentalId, update: Partial<Rental>): Promise<Required<Rental>> {
