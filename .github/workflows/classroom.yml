@@ -253,9 +253,11 @@ jobs:
           cd v3/postman
           echo '[
             {"key": "serviceUrl", "value": "${{ needs.deploy.outputs.PUBLIC_URL }}"},
-            {"key": "identityProviderUrl", "value": "${{ needs.deploy.outputs.PUBLIC_URL }}/kc"},
+            {"key": "tokenUrl", "value": "${{ needs.deploy.outputs.PUBLIC_URL }}/kc/realms/${{ secrets.PM_ENV_REALM }}/protocol/openid-connect/token"},
             {"key": "username", "value": "${{ secrets.PM_ENV_USERNAME }}"},
-            {"key": "password", "value": "${{ secrets.PM_ENV_PASSWORD }}"}
+            {"key": "password", "value": "${{ secrets.PM_ENV_PASSWORD }}"},
+            {"key": "clientId", "value": "${{ secrets.PM_ENV_CLIENT_ID }}"},
+            {"key": "clientSecret", "value": "${{ secrets.PM_ENV_CLIENT_SECRET }}"}
           ]' > environment.json
 
       - name: Run API Tests
