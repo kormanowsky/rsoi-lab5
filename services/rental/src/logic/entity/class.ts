@@ -126,7 +126,7 @@ export class RentalLogic implements
         this.validatePartialEntity(value);
     }
 
-    validateFilter(value: RentalFilter): void {
+    validateFilter(_: RentalFilter): void {
         
     }
 
