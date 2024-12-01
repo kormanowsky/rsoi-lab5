@@ -1,6 +1,10 @@
 import { EntityClient, Rental, RentalFilter, RentalId } from '@rsoi-lab2/library';
 
 export class RentalsClient extends EntityClient<Rental, RentalFilter, RentalId>{
+    withOpts(opts: RequestInit): EntityClient<Rental, RentalFilter, string, false> {
+        return new RentalsClient(this.getBaseUrl(), opts);
+    }
+
     getOne(id: string, opts?: RequestInit): Promise<Required<Rental> | null> {
         return super.getOne(id, opts).then(this.patchRental.bind(this));
     }

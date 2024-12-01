@@ -4,6 +4,7 @@ import {
 } from '@rsoi-lab2/library';
 
 import { ConfigurableLogic, LogicOptions } from './interface';
+import { getClientOptsFromLogicOptions } from './helpers';
 
 export class CarsLogic implements 
     EntityLogic<Required<Car>, CarFilter, CarId>,
@@ -18,8 +19,9 @@ export class CarsLogic implements
     }
 
     withOptions(options: LogicOptions): CarsLogic {
-        // TODO: передать в клиент параметры из authCredential
-        return new CarsLogic(this.client);
+        return new CarsLogic(
+            this.client.withOpts(getClientOptsFromLogicOptions(options))
+        );
     }
 
     getOne(id: CarId): Promise<Required<Car> | null> {
