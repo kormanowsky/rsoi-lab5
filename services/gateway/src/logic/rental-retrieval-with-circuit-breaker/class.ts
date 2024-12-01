@@ -10,7 +10,7 @@ import {
 export class CBRentalRetrievalLogic extends RentalRetrievalLogic {
     constructor(
         cb: CircuitBreaker, 
-        rentalLogic: EntityLogic<Rental, RentalFilter, RentalId>, 
+        rentalLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>, 
         dereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>
     ) {
         super(rentalLogic, dereferenceLogic);

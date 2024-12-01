@@ -3,13 +3,25 @@ import {
     EntityClient, EntityLogic, EntityPaginationData, EntityPaginationFilter 
 } from '@rsoi-lab2/library';
 
-export class PaymentsLogic implements EntityLogic<Required<Payment>, PaymentFilter, PaymentId> {
+import { ConfigurableLogic, LogicOptions } from './interface';
+import { getClientOptsFromLogicOptions } from './helpers';
+
+export class PaymentsLogic implements 
+    EntityLogic<Required<Payment>, PaymentFilter, PaymentId>,
+    ConfigurableLogic<PaymentsLogic> 
+{
     constructor(client: EntityClient<Required<Payment>, PaymentFilter, PaymentId>) {
         this.client = client;
     }
 
     getIdType(): 'string' | 'number' {
         return 'string';
+    }
+    
+    withOptions(options: LogicOptions): ConfigurableLogic<PaymentsLogic> {
+        return new PaymentsLogic(
+            this.client.withOpts(getClientOptsFromLogicOptions(options))
+        );
     }
 
     getOne(id: PaymentId): Promise<Required<Payment> | null> {

@@ -17,9 +17,9 @@ import {
 export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic> {
     constructor(
         carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>,
-        paymentsLogic: EntityLogic<Payment, PaymentFilter, PaymentId>,
-        rentalsLogic: EntityLogic<Rental, RentalFilter, RentalId>,
-        rentalDereferenceLogic: RentalDereferenceUidsLogic
+        paymentsLogic: ConfigurableLogic<EntityLogic<Payment, PaymentFilter, PaymentId>>,
+        rentalsLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>,
+        rentalDereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>
     ) {
         this.carsLogic = carsLogic;
         this.paymentsLogic = paymentsLogic;
@@ -30,9 +30,9 @@ export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic>
     withOptions(options: LogicOptions): ConfigurableLogic<RentalProcessLogic> {
         return new RentalProcessLogic(
             this.carsLogic.withOptions(options),
-            this.paymentsLogic,
-            this.rentalsLogic,
-            this.rentalDereferenceLogic
+            this.paymentsLogic.withOptions(options),
+            this.rentalsLogic.withOptions(options),
+            this.rentalDereferenceLogic.withOptions(options)
         );
     }
 
@@ -241,7 +241,7 @@ export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic>
     }
 
     private carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>;
-    private paymentsLogic: EntityLogic<Payment, PaymentFilter, PaymentId>;
-    private rentalsLogic: EntityLogic<Rental, RentalFilter, RentalId>;
-    private rentalDereferenceLogic: RentalDereferenceUidsLogic;
+    private paymentsLogic: ConfigurableLogic<EntityLogic<Payment, PaymentFilter, PaymentId>>;
+    private rentalsLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>;
+    private rentalDereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>;
 }

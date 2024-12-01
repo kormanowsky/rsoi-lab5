@@ -17,7 +17,7 @@ import {
 export class RentalDereferenceUidsLogic implements ConfigurableLogic<RentalDereferenceUidsLogic> {
     constructor(
         carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>,
-        paymentLogic: EntityLogic<Payment, PaymentFilter, PaymentId>
+        paymentLogic: ConfigurableLogic<EntityLogic<Payment, PaymentFilter, PaymentId>>
     ) {
         this.carsLogic = carsLogic;
         this.paymentLogic = paymentLogic;
@@ -26,7 +26,7 @@ export class RentalDereferenceUidsLogic implements ConfigurableLogic<RentalDeref
     withOptions(options: LogicOptions): ConfigurableLogic<RentalDereferenceUidsLogic> {
         return new RentalDereferenceUidsLogic(
             this.carsLogic.withOptions(options),
-            this.paymentLogic  
+            this.paymentLogic.withOptions(options)  
         );
     }
 
@@ -112,5 +112,5 @@ export class RentalDereferenceUidsLogic implements ConfigurableLogic<RentalDeref
     }
 
     private carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>;
-    private paymentLogic: EntityLogic<Payment, PaymentFilter, PaymentId>;
+    private paymentLogic: ConfigurableLogic<EntityLogic<Payment, PaymentFilter, PaymentId>>;
 }

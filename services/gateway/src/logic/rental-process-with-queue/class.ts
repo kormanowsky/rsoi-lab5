@@ -24,9 +24,9 @@ export class RQRentalProcessLogic extends RentalProcessLogic {
     constructor(
         queue: Queue,
         carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>,
-        paymentsLogic: EntityLogic<Payment, PaymentFilter, PaymentId>,
-        rentalsLogic: EntityLogic<Rental, RentalFilter, RentalId>,
-        rentalDereferenceLogic: RentalDereferenceUidsLogic,
+        paymentsLogic: ConfigurableLogic<EntityLogic<Payment, PaymentFilter, PaymentId>>,
+        rentalsLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>,
+        rentalDereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>,
         jobKeepAliveMs: number = maxQueueJobKeepAliveMs
     ) {
         super(carsLogic, paymentsLogic, rentalsLogic, rentalDereferenceLogic);

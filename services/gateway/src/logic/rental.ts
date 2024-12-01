@@ -3,13 +3,25 @@ import {
     EntityClient, EntityLogic, EntityPaginationData, EntityPaginationFilter 
 } from '@rsoi-lab2/library';
 
-export class RentalsLogic implements EntityLogic<Required<Rental>, RentalFilter, RentalId> {
+import { ConfigurableLogic, LogicOptions } from './interface';
+import { getClientOptsFromLogicOptions } from './helpers';
+
+export class RentalsLogic implements 
+    EntityLogic<Required<Rental>, RentalFilter, RentalId>,
+    ConfigurableLogic<RentalsLogic>
+{
     constructor(client: EntityClient<Rental, RentalFilter, RentalId>) {
         this.client = client;
     }
 
     getIdType(): 'string' | 'number' {
         return 'string';
+    }
+
+    withOptions(options: LogicOptions): ConfigurableLogic<RentalsLogic> {
+        return new RentalsLogic(
+            this.client.withOpts(getClientOptsFromLogicOptions(options))
+        );
     }
 
     getOne(id: RentalId): Promise<Required<Rental> | null> {
