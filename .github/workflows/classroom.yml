@@ -189,8 +189,8 @@ jobs:
 
           kubectl delete secret gateway-session-config --kubeconfig .kubeconfig || true
           kubectl create secret generic gateway-session-config \
-          --from-literal=kc-config="${{ secrets.KC_CONFIG }}" \
-          --from-literal=secret="${{ secrets.SESSION_SECRET }}" \
+          --from-literal=kc-config='${{ secrets.KC_CONFIG }}' \
+          --from-literal=secret='${{ secrets.SESSION_SECRET }}' \
           --kubeconfig .kubeconfig
 
           helm pull oci://cr.yandex/yc-marketplace/yandex-cloud/ingress-nginx/chart/ingress-nginx \
