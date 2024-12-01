@@ -12,6 +12,8 @@ export class AuthKeycloakMiddleware extends Middleware {
         this.sessionSecret = secret;
         this.sessionStore = new session.MemoryStore();
         this.keycloak = new Keycloak({store: this.sessionStore, ...options}, config);
+
+        this.keycloak.accessDenied = this.handleAccessDenied.bind(null);
     }
 
     override prepareApp(app: Application): void {
@@ -34,7 +36,7 @@ export class AuthKeycloakMiddleware extends Middleware {
             const token: Record<string, any> | undefined = (<any>req).kauth?.grant?.access_token?.content;
 
             if (token == null || token.preferred_username == null) {
-                res.status(401).send({message: 'Authentication failure'});
+                this.handleAccessDenied(req, res);
                 return;
             }
 
@@ -52,6 +54,10 @@ export class AuthKeycloakMiddleware extends Middleware {
         }
 
         return value;
+    }
+
+    protected handleAccessDenied(_: Request, response: Response): void {
+        response.status(401).send({message: 'Authorization failure'}).end();
     }
 
     private sessionStore: session.Store;
