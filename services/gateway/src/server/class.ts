@@ -29,7 +29,7 @@ export class GatewayServer extends Server {
         this.authMiddleware.prepareApp(server);
 
         server
-            .get('/api/v1/cars', this.getCars.bind(this))
+            .get('/api/v1/cars', authHandlers, this.getCars.bind(this))
             .get('/api/v1/rental', authHandlers, this.getRentals.bind(this))
             .get('/api/v1/rental/:id', authHandlers, this.getRental.bind(this))
             .post('/api/v1/rental', authHandlers, this.startRental.bind(this))
