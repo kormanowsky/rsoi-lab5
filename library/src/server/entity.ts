@@ -33,7 +33,7 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
         server
             .route(`/${this.basePath}`)
             .get(authHandlers, this.paginationEnabled ? this.getPaginatedMany.bind(this) : this.getMany.bind(this))
-            .post(this.create.bind(this));
+            .post(authHandlers, this.create.bind(this));
 
         server
             .route(`/${this.basePath}/:id`)
