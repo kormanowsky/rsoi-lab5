@@ -251,7 +251,12 @@ jobs:
       - name: Prepare API Tests
         run: |
           cd v3/postman
-          echo '[{ "key": "baseUrl", "value": "${{ needs.deploy.outputs.PUBLIC_URL }}" }]' > environment.json
+          echo '[
+            {"key": "serviceUrl", "value": "${{ needs.deploy.outputs.PUBLIC_URL }}"},
+            {"key": "identityProviderUrl", "value": "${{ needs.deploy.outputs.PUBLIC_URL }}/kc"},
+            {"key": "username", "value": "${{ secrets.PM_ENV_USERNAME }}"},
+            {"key": "password", "value": "${{ secrets.PM_ENV_PASSWORD }}"}
+          ]' > environment.json
 
       - name: Run API Tests
         uses: matt-ball/newman-action@master
