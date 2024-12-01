@@ -5,3 +5,4 @@ appEnv:
 exposedPort: 80
 registryCredSecret: "regcred"
 replicas: 2
+hasSessions: true

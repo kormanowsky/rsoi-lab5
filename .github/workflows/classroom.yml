@@ -193,6 +193,24 @@ jobs:
           --from-literal=secret='${{ secrets.SESSION_SECRET }}' \
           --kubeconfig .kubeconfig
 
+          kubectl delete secret cars-session-config --kubeconfig .kubeconfig || true
+          kubectl create secret generic cars-session-config \
+          --from-literal=kc-config='${{ secrets.KC_CONFIG }}' \
+          --from-literal=secret='${{ secrets.SESSION_SECRET }}' \
+          --kubeconfig .kubeconfig
+
+          kubectl delete secret payment-session-config --kubeconfig .kubeconfig || true
+          kubectl create secret generic payment-session-config \
+          --from-literal=kc-config='${{ secrets.KC_CONFIG }}' \
+          --from-literal=secret='${{ secrets.SESSION_SECRET }}' \
+          --kubeconfig .kubeconfig
+
+          kubectl delete secret rental-session-config --kubeconfig .kubeconfig || true
+          kubectl create secret generic rental-session-config \
+          --from-literal=kc-config='${{ secrets.KC_CONFIG }}' \
+          --from-literal=secret='${{ secrets.SESSION_SECRET }}' \
+          --kubeconfig .kubeconfig
+
           helm pull oci://cr.yandex/yc-marketplace/yandex-cloud/ingress-nginx/chart/ingress-nginx \
             --version 4.10.0 \
             --untar
