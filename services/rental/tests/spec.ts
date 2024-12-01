@@ -5,7 +5,7 @@ describe('RentalLogic', () => {
     let logic: RentalLogic;
 
     beforeEach(() => {
-        logic = new RentalLogic(new MockRentalsStorage([mockRental]));
+        logic = new RentalLogic(new MockRentalsStorage([mockRental])).withOptions({username: mockRental.username});
     });
 
     test('получает один Rental', async () => {
