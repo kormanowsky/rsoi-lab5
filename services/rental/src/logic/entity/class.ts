@@ -7,7 +7,7 @@ export class RentalLogic implements
 {
     constructor(
         storage: EntityStorage<Rental, RentalFilter, RentalId>,
-        options: LogicOptions
+        options?: LogicOptions
     ) {
         this.storage = storage;
         this.options = options;
