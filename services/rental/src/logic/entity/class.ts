@@ -22,9 +22,19 @@ export class RentalLogic implements
     }
 
     async getOne(id: RentalId): Promise<Required<Rental> | null> {
+        if (this.options == null) {
+            return Promise.reject(new Error('Rental logic not configured'));
+        }
+
         this.validateId(id);
 
-        return this.storage.getOne(id);
+        const rental = await this.storage.getOne(id);
+
+        if (rental.username !== this.options.username) {
+            return null;
+        }
+
+        return rental;
     }
 
     async getMany(filter: RentalFilter): Promise<Array<Required<Rental>>> {
@@ -32,9 +42,9 @@ export class RentalLogic implements
             return Promise.reject(new Error('Rental logic not configured'));
         }
 
-        filter.username = this.options.username;
-
         this.validateFilter(filter);
+
+        filter.username = this.options.username;
 
         return this.storage.getMany(filter);
     }
@@ -44,11 +54,11 @@ export class RentalLogic implements
     }
 
     async getPaginatedMany(filter: RentalFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Rental>>> {
-        this.validateFilter(filter);
-
         if (this.options == null) {
             return Promise.reject(new Error('Rental logic not configured'));
         }
+
+        this.validateFilter(filter);
 
         filter.username = this.options.username;
 
@@ -75,13 +85,27 @@ export class RentalLogic implements
         this.validateId(id);
         this.validatePartialEntity(update);
 
-        update.username = this.options.username;
+        const rental = await this.storage.getOne(id);
+
+        if (rental.username !== this.options.username) {
+            return rental;
+        }
 
         return this.storage.update(id, update);
     }
 
     async delete(id: RentalId): Promise<boolean> {
+        if (this.options == null) {
+            return Promise.reject(new Error('Rental logic not configured'));
+        }
+
         this.validateId(id);
+
+        const rental = await this.storage.getOne(id);
+
+        if (rental.username !== this.options.username) {
+            return false;
+        }
 
         return this.storage.delete(id);
     }
@@ -103,9 +127,7 @@ export class RentalLogic implements
     }
 
     validateFilter(value: RentalFilter): void {
-        if(value.username.length === 0) {
-            throw new Error('Invalid rental filter: has empty username');
-        }
+        
     }
 
     validatePartialEntity(value: Partial<Rental>): void {
