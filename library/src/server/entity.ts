@@ -1,4 +1,6 @@
-import { EntityLogic, EntityPaginationFilter, EntityParser } from '../logic';
+import { ConfigurableLogic, EntityLogic, EntityPaginationFilter, EntityParser } from '../logic';
+
+import { Middleware } from '../middleware/abstract';
 
 import { Server } from './abstract';
 import { ServerRequest, ServerResponse } from './interface';
@@ -8,7 +10,8 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
     implements EntityParser<TEnt, TEntFilter, TId> {
 
     constructor(
-        logic: EntityLogic<TEnt, TEntFilter, TId>, 
+        logic: ConfigurableLogic<EntityLogic<TEnt, TEntFilter, TId>>,
+        authMiddleware: Middleware,
         basePath: string, 
         port: number,
         enablePagination: boolean = false
@@ -16,22 +19,27 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
         super(port);
         this.basePath = basePath;
         this.logic = logic;
+        this.authMiddleware = authMiddleware;
         this.paginationEnabled = enablePagination && logic.supportsPagination();
     }
 
     protected initRoutes(): void {
-        const server = this.getServer();
+        const 
+            server = this.getServer(),
+            authHandlers = this.authMiddleware.getHandlers();
+
+        this.authMiddleware.prepareApp(server);
 
         server
             .route(`/${this.basePath}`)
-            .get(this.paginationEnabled ? this.getPaginatedMany.bind(this) : this.getMany.bind(this))
+            .get(authHandlers, this.paginationEnabled ? this.getPaginatedMany.bind(this) : this.getMany.bind(this))
             .post(this.create.bind(this));
 
         server
             .route(`/${this.basePath}/:id`)
-            .get(this.getOne.bind(this))
-            .patch(this.update.bind(this))
-            .delete(this.delete.bind(this));
+            .get(authHandlers, this.getOne.bind(this))
+            .patch(authHandlers, this.update.bind(this))
+            .delete(authHandlers, this.delete.bind(this));
     }
 
     protected getOne(req: ServerRequest, res: ServerResponse): void {
@@ -46,10 +54,16 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
             return;
         }
 
-        this.logic.getOne(idParsed).then(res.send.bind(res)).catch((err) => {
-            res.status(500).send({error: 'Internal Server Error'});
-            console.error(err);
-        });
+        const {username} = req.user;
+
+        this.logic
+            .withOptions({username})
+            .getOne(idParsed)
+            .then(res.send.bind(res))
+            .catch((err) => {
+                res.status(500).send({error: 'Internal Server Error'});
+                console.error(err);
+            });
     }
 
     protected getMany(req: ServerRequest, res: ServerResponse): void {
@@ -63,7 +77,12 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
             return;
         }
 
-        this.logic.getMany(parsedFilter).then(res.send.bind(res)).catch((err) => {
+        const {username} = req.user;
+
+        this.logic
+            .withOptions({username})
+            .getMany({...parsedFilter, username})
+            .then(res.send.bind(res)).catch((err) => {
             res.status(500).send({error: 'Internal Server Error'});
             console.error(err);
         });
@@ -80,10 +99,16 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
             return;
         }
 
-        this.logic.getPaginatedMany(parsedFilter).then(res.send.bind(res)).catch((err) => {
-            res.status(500).send({error: 'Internal Server Error'});
-            console.error(err);
-        });
+        const {username} = req.user;
+
+        this.logic
+            .withOptions({username})
+            .getPaginatedMany(parsedFilter)
+            .then(res.send.bind(res))
+            .catch((err) => {
+                res.status(500).send({error: 'Internal Server Error'});
+                console.error(err);
+            });
     }
 
     protected create(req: ServerRequest, res: ServerResponse): void {
@@ -97,10 +122,16 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
             return;
         }
 
-        this.logic.create(parsedEntity).then(res.send.bind(res)).catch((err) => {
-            res.status(500).send({error: 'Internal Server Error'});
-            console.error(err);
-        });
+        const {username} = req.user;
+
+        this.logic
+            .withOptions({username})
+            .create(parsedEntity)
+            .then(res.send.bind(res))
+            .catch((err) => {
+                res.status(500).send({error: 'Internal Server Error'});
+                console.error(err);
+            });
     }
 
     protected update(req: ServerRequest, res: ServerResponse): void {
@@ -117,6 +148,8 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
             return;
         }
 
+        const {username} = req.user;
+
         try {
             parsedUpdate = this.parsePartialEntity(req.body);
         } catch (err) {
@@ -125,13 +158,17 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
             return;
         }
 
-        this.logic.update(
-            idParsed,
-            parsedUpdate
-        ).then(res.send.bind(res)).catch((err) => {
-            res.status(500).send({error: 'Internal Server Error'});
-            console.error(err);
-        });
+        this.logic
+            .withOptions({username})
+            .update(
+                idParsed,
+                parsedUpdate
+            )
+            .then(res.send.bind(res))
+            .catch((err) => {
+                res.status(500).send({error: 'Internal Server Error'});
+                console.error(err);
+            });
     }
 
     protected delete(req: ServerRequest, res: ServerResponse): void {
@@ -146,7 +183,11 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
             return;
         }
 
-        this.logic.delete(idParsed)
+        const {username} = req.user;
+
+        this.logic
+            .withOptions({username})
+            .delete(idParsed)
             .then(() => res.status(204).send())
             .catch((err) => {
                 res.status(500).send({error: 'Internal Server Error'});
@@ -187,7 +228,8 @@ export abstract class EntityServer<TEnt, TEntFilter, TId extends string | number
     abstract parsePaginationFilter(value: unknown): TEntFilter & EntityPaginationFilter;
     abstract parsePartialEntity(value: unknown): Partial<TEnt>;
 
-    private logic: EntityLogic<TEnt, TEntFilter, TId>;
+    private logic: ConfigurableLogic<EntityLogic<TEnt, TEntFilter, TId>>;
+    private authMiddleware: Middleware;
     private basePath: string;
     private paginationEnabled: boolean;
 }

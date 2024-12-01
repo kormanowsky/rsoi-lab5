@@ -1,13 +1,17 @@
-import { EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage } from '@rsoi-lab2/library';
+import { ConfigurableLogic, EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage, LogicOptions } from '@rsoi-lab2/library';
 import { Car, CarFilter, CarId } from './interface';
 
-export class CarsLogic implements EntityLogic<Car, CarFilter, CarId> {
+export class CarsLogic implements EntityLogic<Car, CarFilter, CarId>, ConfigurableLogic<CarsLogic> {
     constructor(storage: EntityStorage<Car, CarFilter, CarId>) {
         this.storage = storage;
     }
 
     getIdType(): 'string' | 'number' {
         return this.storage.getIdType();
+    }
+
+    withOptions(_: LogicOptions): ConfigurableLogic<CarsLogic, LogicOptions> {
+        return this;
     }
 
     async getOne(id: CarId): Promise<Required<Car> | null> {

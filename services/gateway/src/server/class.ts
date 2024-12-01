@@ -1,6 +1,5 @@
-import { Server, ServerRequest, ServerResponse, Car, Rental, EntityLogic, CarFilter, CarId, Middleware } from '@rsoi-lab2/library';
+import { Server, ServerRequest, ServerResponse, Rental, CarFilter, Middleware } from '@rsoi-lab2/library';
 import { CarsRetrievalLogic, RentalProcessLogic, RentalRetrievalLogic, RetrievedRental } from '../logic';
-import { LogicOptions } from '../logic/interface';
 
 type RentalServerResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
     dateFrom: string;
