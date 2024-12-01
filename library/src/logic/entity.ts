@@ -48,7 +48,6 @@ export interface EntityLogic<TEnt, TEntFilter, TId extends string | number = str
         EntityFilter<TEnt, TEntFilter>,
         EntityValidator<TEnt, TEntFilter, TId>,
         EntityIdTypeSwitch {
-    
 }
 
 export interface EntityStorage<TEnt, TEntFilter, TId extends string | number = string>

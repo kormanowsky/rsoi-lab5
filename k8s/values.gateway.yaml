@@ -4,4 +4,3 @@ appEnv:
   RENTAL_API_URL: "http://rental-service/api/v1/rentals/"
   PAYMENT_API_URL: "http://payment-service/api/v1/payments/"
 hasRedis: true
-hasSessions: true

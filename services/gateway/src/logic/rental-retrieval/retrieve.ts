@@ -1,5 +1,7 @@
 import { EntityLogic, Rental, RentalFilter, RentalId } from '@rsoi-lab2/library';
 
+import { ConfigurableLogic, LogicOptions } from '../interface';
+
 import { 
     RentalRetrieveAllRequest,
     RentalRetrieveAllResponse,
@@ -9,21 +11,28 @@ import {
 
 import { RentalDereferenceUidsLogic } from './dereference';
 
-export class RentalRetrievalLogic {
+export class RentalRetrievalLogic implements ConfigurableLogic<RentalRetrievalLogic> {
     constructor(
-        rentalLogic: EntityLogic<Rental, RentalFilter, RentalId>,
-        dereferenceLogic: RentalDereferenceUidsLogic
+        rentalLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>,
+        dereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>
     ) {
         this.rentalLogic = rentalLogic;
         this.dereferenceLogic = dereferenceLogic;
     }
 
+    withOptions(options: LogicOptions): ConfigurableLogic<RentalRetrievalLogic> {
+        return new RentalRetrievalLogic(
+            this.rentalLogic.withOptions(options),
+            this.dereferenceLogic.withOptions(options)
+        );
+    }
+
     async retrieveRental(request: RentalRetrieveSingleRequest): Promise<RentalRetrieveSingleResponse> {
         const 
-            {rentalUid, username} = request,
+            {rentalUid} = request,
             rawRental = await this.rentalLogic.getOne(rentalUid);
 
-        if (rawRental == null || rawRental.username !== username) {
+        if (rawRental == null) {
             return {rental: null};
         }
 
@@ -42,6 +51,6 @@ export class RentalRetrievalLogic {
         }
     }
 
-    private rentalLogic: EntityLogic<Rental, RentalFilter, RentalId>;
-    private dereferenceLogic: RentalDereferenceUidsLogic;
+    private rentalLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>;
+    private dereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>;
 }

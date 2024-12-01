@@ -5,7 +5,8 @@ describe('RentalLogic', () => {
     let logic: RentalLogic;
 
     beforeEach(() => {
-        logic = new RentalLogic(new MockRentalsStorage([mockRental]));
+        logic = new RentalLogic(new MockRentalsStorage([mockRental]))
+            .withOptions({username: mockRental.username});
     });
 
     test('получает один Rental', async () => {
@@ -17,12 +18,16 @@ describe('RentalLogic', () => {
     describe('получает несколько Rental', () => {
         beforeEach(async () => {
             for(let i = 0; i < 5; ++i) {
-                await logic.create(mockRental);
+                const newMockRental = {...mockRental};
+
+                delete newMockRental.username;
+
+                await logic.create(newMockRental);
             }
         });
 
         test('без пагинации', async () => {
-            const rentals = await logic.getMany({username: mockRental.username});
+            const rentals = await logic.getMany({});
     
             expect(rentals).toHaveLength(6);
             expect(rentals[0]).toEqual(mockRental);
@@ -30,7 +35,11 @@ describe('RentalLogic', () => {
     });
 
     test('создает Rental', async () => {
-        const newRental = await logic.create(mockRental);
+        const newMockRental = {...mockRental};
+
+        delete newMockRental.username;
+
+        const newRental = await logic.create(newMockRental);
 
         expect(newRental.id).toBeDefined();
         expect(newRental.id).not.toEqual(mockRental.id);

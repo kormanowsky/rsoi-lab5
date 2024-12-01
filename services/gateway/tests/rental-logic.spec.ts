@@ -23,7 +23,7 @@ describe('RentalsLogic', () => {
         });
 
         test('без пагинации', async () => {
-            const rentals = await logic.getMany({username: mockRental.username});
+            const rentals = await logic.getMany({});
     
             expect(rentals).toHaveLength(6);
             expect(rentals[0]).toEqual(mockRental);

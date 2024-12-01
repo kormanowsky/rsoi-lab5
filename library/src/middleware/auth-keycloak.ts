@@ -1,6 +1,8 @@
 import session from 'express-session';
 import Keycloak from 'keycloak-connect';
 
+import { ServerRequest, ServerResponse } from '../server';
+
 import { Request, Response, NextFunction, Middleware, RequestHandler, Application } from './abstract';
 
 
@@ -27,20 +29,35 @@ export class AuthKeycloakMiddleware extends Middleware {
         );
 
         app.use(this.keycloak.middleware());
+
+        app.use((request: ServerRequest, _: ServerResponse, next: NextFunction) => {
+            request.user = null;
+            next();
+        });
     }
 
     override getHandlers(): RequestHandler[] {
         const kcHandler = this.keycloak.protect();
 
-        const adapterHandler = (req: Request, res: Response, next: NextFunction): void => {
-            const token: Record<string, any> | undefined = (<any>req).kauth?.grant?.access_token?.content;
+        const adapterHandler = (req: ServerRequest, res: ServerResponse, next: NextFunction): void => {
+            const accessToken: Record<string, any> | undefined = (<any>req).kauth?.grant?.access_token;
 
-            if (token == null || token.preferred_username == null) {
+            if (accessToken == null) {
                 this.handleAccessDenied(req, res);
                 return;
             }
 
-            req.body.auth = token.preferred_username;
+            const {token, content} = accessToken;
+
+            if (token == null || content == null || content.preferred_username == null) {
+                this.handleAccessDenied(req, res);
+                return;
+            }
+
+            req.user = {
+                username: content.preferred_username, 
+                credential: {type: 'header', headerName: 'Authorization', headerValue: `Bearer ${token}`}
+            };
 
             next();
         };

@@ -1,4 +1,4 @@
-import { Server, ServerRequest, ServerResponse, Car, Rental, EntityLogic, CarFilter, CarId, Middleware } from '@rsoi-lab2/library';
+import { Server, ServerRequest, ServerResponse, Rental, CarFilter, Middleware } from '@rsoi-lab2/library';
 import { CarsRetrievalLogic, RentalProcessLogic, RentalRetrievalLogic, RetrievedRental } from '../logic';
 
 type RentalServerResponse = Omit<RetrievedRental, 'dateFrom' | 'dateTo'> & {
@@ -41,6 +41,7 @@ export class GatewayServer extends Server {
         const filter = this.parseCarFilter(req.query);
 
         this.carsRetrievalLogic
+            .withOptions({authCredential: req.user.credential})
             .retrieveCars({filter})
             .then(({cars}) => res.send(cars))
             .catch((err) => {
@@ -50,10 +51,9 @@ export class GatewayServer extends Server {
     }
 
     protected getRentals(req: ServerRequest, res: ServerResponse): void {
-        const username: string = req.body.auth;
-
         this.rentalRetrievalLogic
-            .retrieveRentals({username})
+            .withOptions({authCredential: req.user.credential})
+            .retrieveRentals({})
             .then(({rentals}) => rentals.map(this.dumpRental.bind(this)))
             .then(res.send.bind(res))
             .catch((err) => {
@@ -73,11 +73,11 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const username: string = req.body.auth;
-
         try {
 
-            const {rental} = await this.rentalRetrievalLogic.retrieveRental({rentalUid, username});
+            const {rental} = await this.rentalRetrievalLogic
+                .withOptions({authCredential: req.user.credential})
+                .retrieveRental({rentalUid});
 
             if (rental == null) {
                 res.status(404).send({message: 'No such rental'});
@@ -103,12 +103,9 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const username: string = req.body.auth;
-
-        const response = await this.rentalProcessLogic.startRental({
-            ...rentalServerRequest, 
-            username
-        });
+        const response = await this.rentalProcessLogic
+            .withOptions({authCredential: req.user.credential})
+            .startRental(rentalServerRequest);
 
         if (response.error === true) {
             res.status(response.code).send({message: response.message});
@@ -128,12 +125,9 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const username: string = req.body.auth;
-
-        const response = await this.rentalProcessLogic.finishRental({
-            rentalUid, 
-            username
-        });
+        const response = await this.rentalProcessLogic
+            .withOptions({authCredential: req.user.credential})
+            .finishRental({rentalUid});
 
         if (response.error) {
             res.status(response.code).send({message: response.message});
@@ -153,12 +147,9 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const username: string = req.body.auth;
-
-        const response = await this.rentalProcessLogic.cancelRental({
-            rentalUid, 
-            username
-        });
+        const response = await this.rentalProcessLogic
+            .withOptions({authCredential: req.user.credential})
+            .cancelRental({rentalUid});
 
         if (response.error) {
             res.status(response.code).send({message: response.message});

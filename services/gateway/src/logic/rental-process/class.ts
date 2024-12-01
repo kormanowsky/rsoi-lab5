@@ -1,19 +1,39 @@
 import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId, Rental, RentalFilter, RentalId, Transaction, TransactionChain, TransactionCommitOutput } from '@rsoi-lab2/library';
+import { ConfigurableLogic, LogicOptions } from '../interface';
 import { RentalDereferenceUidsLogic } from '../rental-retrieval';
-import { RentalProcessCalculateRequest, RentalProcessCalculateResponse, RentalProcessCancelRequest, RentalProcessCancelResponse, RentalProcessFinishRequest, RentalProcessFinishResponse, RentalProcessStartRequest, RentalProcessStartRequestWithPrice, RentalProcessStartResponse } from './interface';
+import { 
+    RentalProcessCalculateRequest, 
+    RentalProcessCalculateResponse, 
+    RentalProcessCancelRequest, 
+    RentalProcessCancelResponse, 
+    RentalProcessFinishRequest, 
+    RentalProcessFinishResponse, 
+    RentalProcessStartRequest, 
+    RentalProcessStartRequestWithPrice, 
+    RentalProcessStartResponse 
+} from './interface';
 
 
-export class RentalProcessLogic {
+export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic> {
     constructor(
-        carsLogic: EntityLogic<Car, CarFilter, CarId>,
-        paymentsLogic: EntityLogic<Payment, PaymentFilter, PaymentId>,
-        rentalsLogic: EntityLogic<Rental, RentalFilter, RentalId>,
-        rentalDereferenceLogic: RentalDereferenceUidsLogic
+        carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>,
+        paymentsLogic: ConfigurableLogic<EntityLogic<Payment, PaymentFilter, PaymentId>>,
+        rentalsLogic: ConfigurableLogic<EntityLogic<Omit<Rental, 'username'>, RentalFilter, RentalId>>,
+        rentalDereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>
     ) {
         this.carsLogic = carsLogic;
         this.paymentsLogic = paymentsLogic;
         this.rentalsLogic = rentalsLogic;
         this.rentalDereferenceLogic = rentalDereferenceLogic;
+    }
+
+    withOptions(options: LogicOptions): ConfigurableLogic<RentalProcessLogic> {
+        return new RentalProcessLogic(
+            this.carsLogic.withOptions(options),
+            this.paymentsLogic.withOptions(options),
+            this.rentalsLogic.withOptions(options),
+            this.rentalDereferenceLogic.withOptions(options)
+        );
     }
 
     async startRental(request: RentalProcessStartRequest): Promise<RentalProcessStartResponse> {
@@ -50,13 +70,13 @@ export class RentalProcessLogic {
         let rental: Required<Rental> | null;
 
         try {
-            rental = await this.rentalsLogic.getOne(request.rentalUid);
+            rental = <Required<Rental>>await this.rentalsLogic.getOne(request.rentalUid);
         } catch (err) {
             console.log(err);
             return {error: true, code: 500, message: 'Rental service failure'};
         }
 
-        if (rental == null || rental.username !== request.username) {
+        if (rental == null) {
             return {error: true, code: 404, message: 'No such rental'};
         }
 
@@ -73,13 +93,13 @@ export class RentalProcessLogic {
         let rental: Required<Rental> | null;
 
         try {
-            rental = await this.rentalsLogic.getOne(request.rentalUid);
+            rental = <Required<Rental>>await this.rentalsLogic.getOne(request.rentalUid);
         } catch (err) {
             console.log(err);
             return {error: true, code: 500, message: 'Rental service failure'};
         }
 
-        if (rental == null || rental.username !== request.username) {
+        if (rental == null) {
             return {error: true, code: 404, message: 'No such rental'};
         }
 
@@ -146,7 +166,7 @@ export class RentalProcessLogic {
             new Transaction({
                 do: async (state) => {
                     try {
-                        state.rental = await this.rentalsLogic.create({
+                        state.rental = <Required<Rental>>await this.rentalsLogic.create({
                             ...request,
                             paymentUid: state.payment!.paymentUid,
                             status: 'IN_PROGRESS'
@@ -220,8 +240,8 @@ export class RentalProcessLogic {
         return chain.commit();
     }
 
-    private carsLogic: EntityLogic<Car, CarFilter, CarId>;
-    private paymentsLogic: EntityLogic<Payment, PaymentFilter, PaymentId>;
-    private rentalsLogic: EntityLogic<Rental, RentalFilter, RentalId>;
-    private rentalDereferenceLogic: RentalDereferenceUidsLogic;
+    private carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>;
+    private paymentsLogic: ConfigurableLogic<EntityLogic<Payment, PaymentFilter, PaymentId>>;
+    private rentalsLogic: ConfigurableLogic<EntityLogic<Omit<Rental, 'username'>, RentalFilter, RentalId>>;
+    private rentalDereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>;
 }

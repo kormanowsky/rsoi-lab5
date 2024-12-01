@@ -43,6 +43,23 @@ export interface Rental {
 
 export type RentalId = string;
 
-export interface RentalFilter {
-    username: string;
+export interface RentalFilter {}
+
+export interface UsernameUserCredential {
+    type: 'header';
+    headerName: 'X-User-Name';
+    headerValue: string;
 }
+
+export interface BearerUserCredential {
+    type: 'header';
+    headerName: 'Authorization';
+    headerValue: string;
+}
+
+export type UserCredential = UsernameUserCredential | BearerUserCredential;
+
+export interface User {
+    username: string;
+    credential: UserCredential;
+};

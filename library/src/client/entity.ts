@@ -8,12 +8,18 @@ export class EntityClient<
 > 
     implements EntityCRUD<TEnt, TId>
 {
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, opts?: RequestInit) {
         this.baseUrl = baseUrl;
+        this.opts = opts;
+    }
+
+    withOpts(opts: RequestInit): EntityClient<TEnt, TEntFilter, TId, TPaginationEnabled> {
+        return new EntityClient<TEnt, TEntFilter, TId, TPaginationEnabled>(this.baseUrl, opts);
     }
 
     async getOne(id: TId, opts?: RequestInit): Promise<Required<TEnt> | null> {
         const response = await fetch(`${this.baseUrl}${id}`, {
+            ...this.opts,
             ...opts,
             method: 'GET'
         });
@@ -39,6 +45,7 @@ export class EntityClient<
         }
 
         const response = await fetch(`${this.baseUrl}?${queryParams.toString()}`, {
+            ...this.opts,
             ...opts,
             method: 'GET'
         });
@@ -52,9 +59,11 @@ export class EntityClient<
 
     async create(entity: TEnt, opts?: RequestInit): Promise<Required<TEnt>> {
         const response = await fetch(this.baseUrl, {
+            ...this.opts,
             ...opts,
             method: 'POST',
             headers: {
+                ...this.opts?.headers,
                 ...opts?.headers,
                 'Content-Type': 'application/json'
             },
@@ -70,9 +79,11 @@ export class EntityClient<
 
     async update(id: TId, update: Partial<TEnt>, opts?: RequestInit): Promise<Required<TEnt>> {
         const response = await fetch(`${this.baseUrl}${id}`, {
+            ...this.opts,
             ...opts,
             method: 'PATCH',
             headers: {
+                ...this.opts?.headers,
                 ...opts?.headers,
                 'Content-Type': 'application/json'
             },
@@ -88,6 +99,7 @@ export class EntityClient<
 
     async delete(id: TId, opts?: RequestInit): Promise<boolean> {
         const response = await fetch(`${this.baseUrl}${id}`, {
+            ...this.opts,
             ...opts,
             method: 'DELETE'
         });
@@ -99,5 +111,10 @@ export class EntityClient<
         throw new Error('failed to delete');
     }
 
+    protected getBaseUrl(): string {
+        return this.baseUrl;
+    }
+
     private baseUrl: string;
+    private opts?: RequestInit;
 }

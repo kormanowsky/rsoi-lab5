@@ -49,7 +49,6 @@ const oauthConfig = noOauth ? null : {
     keycloakConfig: JSON.parse(process.env.KC_CONFIG ?? '{}'),
 };
 
-
 const authMiddleware = noOauth ? 
     new AuthUsernameHeaderMiddleware() : 
     new AuthKeycloakMiddleware(oauthConfig.sessionSecret, oauthConfig.keycloakConfig);

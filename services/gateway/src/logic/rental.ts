@@ -3,13 +3,25 @@ import {
     EntityClient, EntityLogic, EntityPaginationData, EntityPaginationFilter 
 } from '@rsoi-lab2/library';
 
-export class RentalsLogic implements EntityLogic<Required<Rental>, RentalFilter, RentalId> {
+import { ConfigurableLogic, LogicOptions } from './interface';
+import { getClientOptsFromLogicOptions } from './helpers';
+
+export class RentalsLogic implements 
+    EntityLogic<Required<Rental>, RentalFilter, RentalId>,
+    ConfigurableLogic<RentalsLogic>
+{
     constructor(client: EntityClient<Rental, RentalFilter, RentalId>) {
         this.client = client;
     }
 
     getIdType(): 'string' | 'number' {
         return 'string';
+    }
+
+    withOptions(options: LogicOptions): ConfigurableLogic<RentalsLogic> {
+        return new RentalsLogic(
+            this.client.withOpts(getClientOptsFromLogicOptions(options))
+        );
     }
 
     getOne(id: RentalId): Promise<Required<Rental> | null> {
@@ -52,8 +64,8 @@ export class RentalsLogic implements EntityLogic<Required<Rental>, RentalFilter,
         }
     }
 
-    validateEntity(value: Rental): void {
-        for(const key of ['carUid', 'paymentUid', 'username', 'dateFrom', 'dateTo']) {
+    validateEntity(value: Omit<Rental, 'username'>): void {
+        for(const key of ['carUid', 'paymentUid', 'dateFrom', 'dateTo']) {
             if (!value.hasOwnProperty(key)) {
                 throw new Error(`Invalid rental: must contain value in ${key} key`);
             }
@@ -62,10 +74,8 @@ export class RentalsLogic implements EntityLogic<Required<Rental>, RentalFilter,
         this.validatePartialEntity(value);
     }
 
-    validateFilter(value: RentalFilter): void {
-        if(value.username.length === 0) {
-            throw new Error('Invalid rental filter: has empty username');
-        }
+    validateFilter(_: RentalFilter): void {
+
     }
 
     validatePartialEntity(value: Partial<Rental>): void {
@@ -77,10 +87,14 @@ export class RentalsLogic implements EntityLogic<Required<Rental>, RentalFilter,
             throw new Error('Invalid rental: has wrong dates order');
         }
 
-        for(const key of ['carUid', 'paymentUid', 'username']) {
+        for(const key of ['carUid', 'paymentUid']) {
             if (value.hasOwnProperty(key) && value[key].length === 0) {
                 throw new Error(`Invalid rental: must contain non-empty string in key ${key}`);
             }
+        }
+
+        if (value.hasOwnProperty('username')) {
+            throw new Error('Invalid rental: has username');
         }
     }
 

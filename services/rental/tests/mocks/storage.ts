@@ -16,10 +16,8 @@ export class MockRentalsStorage implements EntityStorage<Rental, RentalFilter, R
         return this.storage[id] ?? null;
     }
 
-    async getMany(filter: RentalFilter): Promise<Array<Required<Rental>>> {
-        return Object.values(this.storage).filter(
-            (rental): rental is Required<Rental> => rental != null && rental.username === filter.username
-        );
+    async getMany(_: RentalFilter): Promise<Array<Required<Rental>>> {
+        return Object.values(this.storage);
     }
 
     async getPaginatedMany(_: RentalFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Rental>>> {

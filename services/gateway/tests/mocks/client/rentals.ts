@@ -20,7 +20,7 @@ export class MockRentalsClient extends EntityClient<Rental, RentalFilter, Rental
 
     async getMany(filter: RentalFilter): Promise<Array<Required<Rental>>> {
         return Object.values(this.storage).filter(
-            (rental): rental is Required<Rental> => rental != null && rental.username === filter.username
+            (rental): rental is Required<Rental> => rental != null
         );
     }
 

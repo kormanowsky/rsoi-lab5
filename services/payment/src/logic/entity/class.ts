@@ -1,13 +1,21 @@
-import { EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage } from '@rsoi-lab2/library';
+import { ConfigurableLogic, EntityLogic, EntityPaginationData, EntityPaginationFilter, EntityStorage, LogicOptions } from '@rsoi-lab2/library';
 import { Payment, PaymentFilter, PaymentId } from './interface';
 
-export class PaymentsLogic implements EntityLogic<Payment, PaymentFilter, PaymentId> {
-    constructor(storage: EntityStorage<Payment, PaymentFilter, PaymentId>) {
+export class PaymentsLogic implements 
+    EntityLogic<Payment, PaymentFilter, PaymentId>,
+    ConfigurableLogic<PaymentsLogic> {
+    constructor(
+        storage: EntityStorage<Payment, PaymentFilter, PaymentId>
+    ) {
         this.storage = storage;
     }
 
     getIdType(): 'string' | 'number' {
         return this.storage.getIdType();
+    }
+
+    withOptions(_: LogicOptions): ConfigurableLogic<PaymentsLogic, LogicOptions> {
+        return this;
     }
 
     async getOne(id: PaymentId): Promise<Required<Payment> | null> {
