@@ -16,7 +16,6 @@ export interface RentalProcessStartRequest {
     carUid: CarId;
     dateFrom: Date;
     dateTo: Date;
-    username: RentalFilter['username'];
 };
 
 export interface RentalProcessStartRequestWithPrice extends RentalProcessStartRequest {
@@ -33,7 +32,6 @@ export type RentalProcessStartResponse = RentalProcessStartSuccessResponse |
 
 export interface RentalProcessCancelRequest {
     rentalUid: RentalId;
-    username: RentalFilter['username'];
 }
 
 export type RentalProcessCancelResponse = RentalProcessSuccessResponse | RentalProcessErrorResponse;

@@ -18,16 +18,13 @@ export type RetrievedRentalWithOptionalEntitiesAndUids = RetrievedRentalBase & P
 
 export interface RentalRetrieveSingleRequest {
     rentalUid: Exclude<Rental['rentalUid'], undefined>;
-    username: RentalFilter['username'];
 }
 
 export interface RentalRetrieveSingleResponse {
     rental: RetrievedRental | null;
 }
 
-export interface RentalRetrieveAllRequest {
-    username: RentalFilter['username'];
-}
+export interface RentalRetrieveAllRequest {}
 
 export interface RentalRetrieveAllResponse {
     rentals: RetrievedRental[];

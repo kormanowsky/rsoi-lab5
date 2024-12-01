@@ -13,7 +13,7 @@ import { RentalDereferenceUidsLogic } from './dereference';
 
 export class RentalRetrievalLogic implements ConfigurableLogic<RentalRetrievalLogic> {
     constructor(
-        rentalLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>,
+        rentalLogic: ConfigurableLogic<EntityLogic<Rental, Omit<RentalFilter, 'username'>, RentalId>>,
         dereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>
     ) {
         this.rentalLogic = rentalLogic;
@@ -29,10 +29,10 @@ export class RentalRetrievalLogic implements ConfigurableLogic<RentalRetrievalLo
 
     async retrieveRental(request: RentalRetrieveSingleRequest): Promise<RentalRetrieveSingleResponse> {
         const 
-            {rentalUid, username} = request,
+            {rentalUid} = request,
             rawRental = await this.rentalLogic.getOne(rentalUid);
 
-        if (rawRental == null || rawRental.username !== username) {
+        if (rawRental == null) {
             return {rental: null};
         }
 
@@ -51,6 +51,6 @@ export class RentalRetrievalLogic implements ConfigurableLogic<RentalRetrievalLo
         }
     }
 
-    private rentalLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>;
+    private rentalLogic: ConfigurableLogic<EntityLogic<Rental, Omit<RentalFilter, 'username'>, RentalId>>;
     private dereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>;
 }

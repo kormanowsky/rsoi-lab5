@@ -51,11 +51,9 @@ export class GatewayServer extends Server {
     }
 
     protected getRentals(req: ServerRequest, res: ServerResponse): void {
-        const {username} = req.user;
-
         this.rentalRetrievalLogic
             .withOptions({authCredential: req.user.credential})
-            .retrieveRentals({username})
+            .retrieveRentals({})
             .then(({rentals}) => rentals.map(this.dumpRental.bind(this)))
             .then(res.send.bind(res))
             .catch((err) => {
@@ -75,13 +73,11 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const {username} = req.user;
-
         try {
 
             const {rental} = await this.rentalRetrievalLogic
                 .withOptions({authCredential: req.user.credential})
-                .retrieveRental({rentalUid, username});
+                .retrieveRental({rentalUid});
 
             if (rental == null) {
                 res.status(404).send({message: 'No such rental'});
@@ -107,14 +103,9 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const {username} = req.user;
-
         const response = await this.rentalProcessLogic
             .withOptions({authCredential: req.user.credential})
-            .startRental({
-                ...rentalServerRequest, 
-                username
-            });
+            .startRental(rentalServerRequest);
 
         if (response.error === true) {
             res.status(response.code).send({message: response.message});
@@ -134,14 +125,9 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const {username} = req.user;
-
         const response = await this.rentalProcessLogic
             .withOptions({authCredential: req.user.credential})
-            .finishRental({
-                rentalUid, 
-                username
-            });
+            .finishRental({rentalUid});
 
         if (response.error) {
             res.status(response.code).send({message: response.message});
@@ -161,14 +147,9 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const {username} = req.user;
-
         const response = await this.rentalProcessLogic
             .withOptions({authCredential: req.user.credential})
-            .cancelRental({
-                rentalUid, 
-                username
-            });
+            .cancelRental({rentalUid});
 
         if (response.error) {
             res.status(response.code).send({message: response.message});

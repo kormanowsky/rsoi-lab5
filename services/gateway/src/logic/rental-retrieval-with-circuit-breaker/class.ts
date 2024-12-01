@@ -46,8 +46,7 @@ export class CBRentalRetrievalLogic extends RentalRetrievalLogic {
     protected async retrieveRentalFallback(request: RentalRetrieveSingleRequest): Promise<RentalRetrieveSingleResponse> {
         return {
             rental: <RetrievedRental>{
-                rentalUid: request.rentalUid,
-                username: request.username
+                rentalUid: request.rentalUid
             }
         };
     }

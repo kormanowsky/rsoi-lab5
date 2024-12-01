@@ -18,7 +18,7 @@ export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic>
     constructor(
         carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>,
         paymentsLogic: ConfigurableLogic<EntityLogic<Payment, PaymentFilter, PaymentId>>,
-        rentalsLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>,
+        rentalsLogic: ConfigurableLogic<EntityLogic<Omit<Rental, 'username'>, Omit<RentalFilter, 'username'>, RentalId>>,
         rentalDereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>
     ) {
         this.carsLogic = carsLogic;
@@ -70,13 +70,13 @@ export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic>
         let rental: Required<Rental> | null;
 
         try {
-            rental = await this.rentalsLogic.getOne(request.rentalUid);
+            rental = <Required<Rental>>await this.rentalsLogic.getOne(request.rentalUid);
         } catch (err) {
             console.log(err);
             return {error: true, code: 500, message: 'Rental service failure'};
         }
 
-        if (rental == null || rental.username !== request.username) {
+        if (rental == null) {
             return {error: true, code: 404, message: 'No such rental'};
         }
 
@@ -93,13 +93,13 @@ export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic>
         let rental: Required<Rental> | null;
 
         try {
-            rental = await this.rentalsLogic.getOne(request.rentalUid);
+            rental = <Required<Rental>>await this.rentalsLogic.getOne(request.rentalUid);
         } catch (err) {
             console.log(err);
             return {error: true, code: 500, message: 'Rental service failure'};
         }
 
-        if (rental == null || rental.username !== request.username) {
+        if (rental == null) {
             return {error: true, code: 404, message: 'No such rental'};
         }
 
@@ -166,7 +166,7 @@ export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic>
             new Transaction({
                 do: async (state) => {
                     try {
-                        state.rental = await this.rentalsLogic.create({
+                        state.rental = <Required<Rental>>await this.rentalsLogic.create({
                             ...request,
                             paymentUid: state.payment!.paymentUid,
                             status: 'IN_PROGRESS'
@@ -242,6 +242,6 @@ export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic>
 
     private carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>;
     private paymentsLogic: ConfigurableLogic<EntityLogic<Payment, PaymentFilter, PaymentId>>;
-    private rentalsLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>;
+    private rentalsLogic: ConfigurableLogic<EntityLogic<Omit<Rental, 'username'>, Omit<RentalFilter, 'username'>, RentalId>>;
     private rentalDereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>;
 }
