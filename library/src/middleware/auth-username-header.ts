@@ -11,7 +11,10 @@ export class AuthUsernameHeaderMiddleware extends Middleware {
     }
     
     prepareApp(app: Application): void {
-        app.use((request: ServerRequest) => request.user = null);
+        app.use((request: ServerRequest, _: ServerResponse, next: NextFunction) => {
+            request.user = null;
+            next();
+        });
     }
 
     override getHandlers(): RequestHandler[] {
