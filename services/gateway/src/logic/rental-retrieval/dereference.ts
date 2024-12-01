@@ -1,5 +1,10 @@
 import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId } from '@rsoi-lab2/library';
 
+import {
+    ConfigurableLogic,
+    LogicOptions
+} from '../interface';
+
 import { 
     RentrievedRentalFull,
     RetrievedRental, 
@@ -9,13 +14,20 @@ import {
     RetrievedRentalWithUids
 } from './interface';
 
-export class RentalDereferenceUidsLogic {
+export class RentalDereferenceUidsLogic implements ConfigurableLogic<RentalDereferenceUidsLogic> {
     constructor(
-        carsLogic: EntityLogic<Car, CarFilter, CarId>,
+        carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>,
         paymentLogic: EntityLogic<Payment, PaymentFilter, PaymentId>
     ) {
         this.carsLogic = carsLogic;
         this.paymentLogic = paymentLogic;
+    }
+
+    withOptions(options: LogicOptions): ConfigurableLogic<RentalDereferenceUidsLogic> {
+        return new RentalDereferenceUidsLogic(
+            this.carsLogic.withOptions(options),
+            this.paymentLogic  
+        );
     }
 
     async tryDereferenceRentalCarUid(rental: RetrievedRentalWithUids): 
@@ -99,6 +111,6 @@ export class RentalDereferenceUidsLogic {
         return this.tryDereferenceRentalPaymentUid(rentalWithCar);
     }
 
-    private carsLogic: EntityLogic<Car, CarFilter, CarId>;
+    private carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>;
     private paymentLogic: EntityLogic<Payment, PaymentFilter, PaymentId>;
 }

@@ -2,6 +2,10 @@ import {
     Car, CarFilter, CarId, Payment, PaymentFilter, PaymentId, Rental, RentalFilter, RentalId, EntityLogic 
 } from "@rsoi-lab2/library";
 
+import {
+    ConfigurableLogic
+} from '../interface';
+
 import { 
     RentalProcessLogic,
     RentalProcessCancelRequest, 
@@ -19,7 +23,7 @@ export const maxQueueJobKeepAliveMs = 60_000;
 export class RQRentalProcessLogic extends RentalProcessLogic {
     constructor(
         queue: Queue,
-        carsLogic: EntityLogic<Car, CarFilter, CarId>,
+        carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>,
         paymentsLogic: EntityLogic<Payment, PaymentFilter, PaymentId>,
         rentalsLogic: EntityLogic<Rental, RentalFilter, RentalId>,
         rentalDereferenceLogic: RentalDereferenceUidsLogic,

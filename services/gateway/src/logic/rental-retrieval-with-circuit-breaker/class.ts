@@ -1,5 +1,7 @@
 import { CircuitBreaker, EntityLogic, Rental, RentalFilter, RentalId } from "@rsoi-lab2/library";
 
+import { ConfigurableLogic } from "../interface";
+
 import { 
     RentalDereferenceUidsLogic, RentalRetrievalLogic, RentalRetrieveAllRequest, RentalRetrieveAllResponse, 
     RentalRetrieveSingleRequest, RentalRetrieveSingleResponse, RetrievedRental 
@@ -9,7 +11,7 @@ export class CBRentalRetrievalLogic extends RentalRetrievalLogic {
     constructor(
         cb: CircuitBreaker, 
         rentalLogic: EntityLogic<Rental, RentalFilter, RentalId>, 
-        dereferenceLogic: RentalDereferenceUidsLogic
+        dereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>
     ) {
         super(rentalLogic, dereferenceLogic);
         this.cb = cb;

@@ -41,6 +41,7 @@ export class GatewayServer extends Server {
         const filter = this.parseCarFilter(req.query);
 
         this.carsRetrievalLogic
+            .withOptions({authCredential: req.user.credential})
             .retrieveCars({filter})
             .then(({cars}) => res.send(cars))
             .catch((err) => {

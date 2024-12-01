@@ -1,11 +1,22 @@
 import { Car, CarFilter, CarId, EntityLogic, Payment, PaymentFilter, PaymentId, Rental, RentalFilter, RentalId, Transaction, TransactionChain, TransactionCommitOutput } from '@rsoi-lab2/library';
+import { ConfigurableLogic, LogicOptions } from '../interface';
 import { RentalDereferenceUidsLogic } from '../rental-retrieval';
-import { RentalProcessCalculateRequest, RentalProcessCalculateResponse, RentalProcessCancelRequest, RentalProcessCancelResponse, RentalProcessFinishRequest, RentalProcessFinishResponse, RentalProcessStartRequest, RentalProcessStartRequestWithPrice, RentalProcessStartResponse } from './interface';
+import { 
+    RentalProcessCalculateRequest, 
+    RentalProcessCalculateResponse, 
+    RentalProcessCancelRequest, 
+    RentalProcessCancelResponse, 
+    RentalProcessFinishRequest, 
+    RentalProcessFinishResponse, 
+    RentalProcessStartRequest, 
+    RentalProcessStartRequestWithPrice, 
+    RentalProcessStartResponse 
+} from './interface';
 
 
-export class RentalProcessLogic {
+export class RentalProcessLogic implements ConfigurableLogic<RentalProcessLogic> {
     constructor(
-        carsLogic: EntityLogic<Car, CarFilter, CarId>,
+        carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>,
         paymentsLogic: EntityLogic<Payment, PaymentFilter, PaymentId>,
         rentalsLogic: EntityLogic<Rental, RentalFilter, RentalId>,
         rentalDereferenceLogic: RentalDereferenceUidsLogic
@@ -14,6 +25,15 @@ export class RentalProcessLogic {
         this.paymentsLogic = paymentsLogic;
         this.rentalsLogic = rentalsLogic;
         this.rentalDereferenceLogic = rentalDereferenceLogic;
+    }
+
+    withOptions(options: LogicOptions): ConfigurableLogic<RentalProcessLogic> {
+        return new RentalProcessLogic(
+            this.carsLogic.withOptions(options),
+            this.paymentsLogic,
+            this.rentalsLogic,
+            this.rentalDereferenceLogic
+        );
     }
 
     async startRental(request: RentalProcessStartRequest): Promise<RentalProcessStartResponse> {
@@ -220,7 +240,7 @@ export class RentalProcessLogic {
         return chain.commit();
     }
 
-    private carsLogic: EntityLogic<Car, CarFilter, CarId>;
+    private carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>;
     private paymentsLogic: EntityLogic<Payment, PaymentFilter, PaymentId>;
     private rentalsLogic: EntityLogic<Rental, RentalFilter, RentalId>;
     private rentalDereferenceLogic: RentalDereferenceUidsLogic;

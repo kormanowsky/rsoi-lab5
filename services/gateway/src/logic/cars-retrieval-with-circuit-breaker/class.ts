@@ -1,8 +1,9 @@
 import { Car, CarFilter, CarId, CircuitBreaker, EntityLogic } from "@rsoi-lab2/library";
+import { ConfigurableLogic } from '../interface';
 import { CarsRetrievalLogic, CarsRetrievalRequest, CarsRetrievalResponse } from "../cars-retrieval";
 
 export class CBCarsRetrievalLogic extends CarsRetrievalLogic {
-    constructor(cb: CircuitBreaker, carsLogic: EntityLogic<Car, CarFilter, CarId>) {
+    constructor(cb: CircuitBreaker, carsLogic: ConfigurableLogic<EntityLogic<Car, CarFilter, CarId>>) {
         super(carsLogic);
         this.cb = cb;
 

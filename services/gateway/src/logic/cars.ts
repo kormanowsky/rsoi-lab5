@@ -3,13 +3,23 @@ import {
     EntityClient, EntityLogic, EntityPaginationData, EntityPaginationFilter 
 } from '@rsoi-lab2/library';
 
-export class CarsLogic implements EntityLogic<Required<Car>, CarFilter, CarId> {
+import { ConfigurableLogic, LogicOptions } from './interface';
+
+export class CarsLogic implements 
+    EntityLogic<Required<Car>, CarFilter, CarId>,
+    ConfigurableLogic<CarsLogic>
+{
     constructor(client: EntityClient<Required<Car>, CarFilter, CarId, true>) {
         this.client = client;
     }
 
     getIdType(): 'string' | 'number' {
         return 'string';
+    }
+
+    withOptions(options: LogicOptions): CarsLogic {
+        // TODO: передать в клиент параметры из authCredential
+        return new CarsLogic(this.client);
     }
 
     getOne(id: CarId): Promise<Required<Car> | null> {

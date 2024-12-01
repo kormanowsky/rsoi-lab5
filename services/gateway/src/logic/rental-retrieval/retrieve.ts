@@ -1,5 +1,7 @@
 import { EntityLogic, Rental, RentalFilter, RentalId } from '@rsoi-lab2/library';
 
+import { ConfigurableLogic, LogicOptions } from '../interface';
+
 import { 
     RentalRetrieveAllRequest,
     RentalRetrieveAllResponse,
@@ -9,13 +11,20 @@ import {
 
 import { RentalDereferenceUidsLogic } from './dereference';
 
-export class RentalRetrievalLogic {
+export class RentalRetrievalLogic implements ConfigurableLogic<RentalRetrievalLogic> {
     constructor(
         rentalLogic: EntityLogic<Rental, RentalFilter, RentalId>,
         dereferenceLogic: RentalDereferenceUidsLogic
     ) {
         this.rentalLogic = rentalLogic;
         this.dereferenceLogic = dereferenceLogic;
+    }
+
+    withOptions(options: LogicOptions): ConfigurableLogic<RentalRetrievalLogic> {
+        return new RentalRetrievalLogic(
+            this.rentalLogic,
+            this.dereferenceLogic.withOptions(options)
+        );
     }
 
     async retrieveRental(request: RentalRetrieveSingleRequest): Promise<RentalRetrieveSingleResponse> {
@@ -43,5 +52,5 @@ export class RentalRetrievalLogic {
     }
 
     private rentalLogic: EntityLogic<Rental, RentalFilter, RentalId>;
-    private dereferenceLogic: RentalDereferenceUidsLogic;
+    private dereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>;
 }
