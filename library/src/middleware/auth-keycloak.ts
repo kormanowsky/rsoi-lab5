@@ -31,16 +31,14 @@ export class AuthKeycloakMiddleware extends Middleware {
         const kcHandler = this.keycloak.protect();
 
         const adapterHandler = (req: Request, res: Response, next: NextFunction): void => {
-            const token: string | undefined = (<any>req).kauth?.grant?.access_token?.content;
+            const token: Record<string, any> | undefined = (<any>req).kauth?.grant?.access_token?.content;
 
-            if (token == null) {
+            if (token == null || token.preferred_username == null) {
                 res.status(401).send({message: 'Authentication failure'});
                 return;
             }
 
-            console.log('TOKEN', token);
-
-            req.body.auth = token;
+            req.body.auth = token.preferred_username;
 
             next();
         };
