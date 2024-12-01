@@ -87,8 +87,8 @@ export class RentalLogic implements
 
         const rental = await this.storage.getOne(id);
 
-        if (rental.username !== this.options.username) {
-            return rental;
+        if (rental == null) {
+            return Promise.reject(new Error('Did not update'));
         }
 
         return this.storage.update(id, update);
@@ -103,7 +103,7 @@ export class RentalLogic implements
 
         const rental = await this.storage.getOne(id);
 
-        if (rental.username !== this.options.username) {
+        if (rental == null) {
             return false;
         }
 
