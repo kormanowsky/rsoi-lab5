@@ -50,7 +50,7 @@ export class GatewayServer extends Server {
     }
 
     protected getRentals(req: ServerRequest, res: ServerResponse): void {
-        const username: string = req.body.auth;
+        const {username} = req.user;
 
         this.rentalRetrievalLogic
             .retrieveRentals({username})
@@ -73,7 +73,7 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const username: string = req.body.auth;
+        const {username} = req.user;
 
         try {
 
@@ -103,7 +103,7 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const username: string = req.body.auth;
+        const {username} = req.user;
 
         const response = await this.rentalProcessLogic.startRental({
             ...rentalServerRequest, 
@@ -128,7 +128,7 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const username: string = req.body.auth;
+        const {username} = req.user;
 
         const response = await this.rentalProcessLogic.finishRental({
             rentalUid, 
@@ -153,7 +153,7 @@ export class GatewayServer extends Server {
             return;
         }
 
-        const username: string = req.body.auth;
+        const {username} = req.user;
 
         const response = await this.rentalProcessLogic.cancelRental({
             rentalUid, 

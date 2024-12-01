@@ -1,4 +1,6 @@
-import {Request, Response} from 'express';
+import { Request, Response } from 'express';
 
-export type ServerRequest = Request;
+import { User } from '../types';
+
+export type ServerRequest = Request & {user: User | null};
 export type ServerResponse = Response;

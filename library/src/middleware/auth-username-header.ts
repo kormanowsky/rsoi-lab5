@@ -1,14 +1,21 @@
-import { RequestHandler } from 'express';
-import { Request, Response, NextFunction, Middleware } from './abstract';
+import { Application, RequestHandler } from 'express';
+
+import { ServerRequest, ServerResponse } from '../server';
+
+import { NextFunction, Middleware } from './abstract';
 
 export class AuthUsernameHeaderMiddleware extends Middleware {
     constructor(headerName: string = 'x-user-name') {
         super();
         this.headerName = headerName;
     }
+    
+    prepareApp(app: Application): void {
+        app.use((request: ServerRequest) => request.user = null);
+    }
 
     override getHandlers(): RequestHandler[] {
-        const handler = (req: Request, res: Response, next: NextFunction) => {
+        const handler = (req: ServerRequest, res: ServerResponse, next: NextFunction) => {
             let username: string;
 
             try {
@@ -19,7 +26,10 @@ export class AuthUsernameHeaderMiddleware extends Middleware {
                 return;
             }
     
-            req.body.auth = username;
+            req.user = {
+                username, 
+                credential: {type: 'header', headerName: 'X-User-Name', headerValue: username}
+            };
     
             next();
         };
