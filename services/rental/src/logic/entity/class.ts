@@ -6,7 +6,7 @@ export class RentalLogic implements
     ConfigurableLogic<RentalLogic> 
 {
     constructor(
-        storage: EntityStorage<Rental, RentalFilter, RentalId>,
+        storage: EntityStorage<Rental, RentalFilter & {username: string}, RentalId>,
         options?: LogicOptions
     ) {
         this.storage = storage;
@@ -37,7 +37,7 @@ export class RentalLogic implements
         return rental;
     }
 
-    async getMany(filter: Omit<RentalFilter, 'username'>): Promise<Array<Required<Rental>>> {
+    async getMany(filter: RentalFilter): Promise<Array<Required<Rental>>> {
         if (this.options == null) {
             return Promise.reject(new Error('Rental logic not configured'));
         }
@@ -53,14 +53,14 @@ export class RentalLogic implements
         return this.storage.supportsPagination();
     }
 
-    async getPaginatedMany(filter: Omit<RentalFilter, 'username'> & EntityPaginationFilter): Promise<EntityPaginationData<Required<Rental>>> {
+    async getPaginatedMany(filter: RentalFilter & EntityPaginationFilter): Promise<EntityPaginationData<Required<Rental>>> {
         if (this.options == null) {
             return Promise.reject(new Error('Rental logic not configured'));
         }
 
         this.validateFilter(filter);
 
-        const fullFilter: RentalFilter & EntityPaginationFilter = {...filter, username: this.options.username};
+        const fullFilter: RentalFilter & EntityPaginationFilter & {username: string} = {...filter, username: this.options.username};
 
         return this.storage.getPaginatedMany(fullFilter);
     }
@@ -124,7 +124,7 @@ export class RentalLogic implements
         this.validatePartialEntity(value);
     }
 
-    validateFilter(_: Omit<RentalFilter, 'username'>): void {
+    validateFilter(_: RentalFilter): void {
         
     }
 

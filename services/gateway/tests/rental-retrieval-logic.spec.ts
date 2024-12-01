@@ -16,30 +16,18 @@ describe('RentalRetrievalLogic', () => {
                 });
 
                 test('достает одну аренду пользователя', async () => {
-                    const response = await logic.retrieveRental({rentalUid: mockRental.rentalUid, username: mockRental.username});
+                    const response = await logic.retrieveRental({rentalUid: mockRental.rentalUid});
         
                     expect(response.rental).not.toBeNull();
                     expect(response.rental?.rentalUid).toEqual(mockRental.rentalUid);
                 });
             
                 test('достает все аренды пользователя', async () => {
-                    const response = await logic.retrieveRentals({username: mockRental.username});
+                    const response = await logic.retrieveRentals({});
         
                     expect(response.rentals).toHaveLength(1);
                     expect(response.rentals[0]?.rentalUid).toEqual(mockRental.rentalUid);
-                });
-            
-                test('не достает одну чужую аренду', async () => {
-                    const response = await logic.retrieveRental({rentalUid: mockRental.rentalUid, username: 'not-a-' + mockRental.username});
-        
-                    expect(response.rental).toBeNull();
-                });
-            
-                test('не достает чужие аренды', async () => {
-                    const response = await logic.retrieveRentals({username: 'not-a-' + mockRental.username});
-        
-                    expect(response.rentals).toHaveLength(0);
-                });
+                });        
             });
 
             describe(
@@ -51,11 +39,11 @@ describe('RentalRetrievalLogic', () => {
                 });
 
                 test('не достает одну аренду пользователя', async () => {
-                    await expect(() => logic.retrieveRental({rentalUid: mockRental.rentalUid, username: mockRental.username})).rejects.toThrow();
+                    await expect(() => logic.retrieveRental({rentalUid: mockRental.rentalUid})).rejects.toThrow();
                 });
             
                 test('не достает ни одну аренду пользователя', async () => {
-                    await expect(() => logic.retrieveRentals({username: mockRental.username})).rejects.toThrow();
+                    await expect(() => logic.retrieveRentals({})).rejects.toThrow();
                 });
             })
         }

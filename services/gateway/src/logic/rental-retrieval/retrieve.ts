@@ -13,7 +13,7 @@ import { RentalDereferenceUidsLogic } from './dereference';
 
 export class RentalRetrievalLogic implements ConfigurableLogic<RentalRetrievalLogic> {
     constructor(
-        rentalLogic: ConfigurableLogic<EntityLogic<Rental, Omit<RentalFilter, 'username'>, RentalId>>,
+        rentalLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>,
         dereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>
     ) {
         this.rentalLogic = rentalLogic;
@@ -51,6 +51,6 @@ export class RentalRetrievalLogic implements ConfigurableLogic<RentalRetrievalLo
         }
     }
 
-    private rentalLogic: ConfigurableLogic<EntityLogic<Rental, Omit<RentalFilter, 'username'>, RentalId>>;
+    private rentalLogic: ConfigurableLogic<EntityLogic<Rental, RentalFilter, RentalId>>;
     private dereferenceLogic: ConfigurableLogic<RentalDereferenceUidsLogic>;
 }

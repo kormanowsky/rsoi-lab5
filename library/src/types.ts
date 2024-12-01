@@ -43,9 +43,7 @@ export interface Rental {
 
 export type RentalId = string;
 
-export interface RentalFilter {
-    username: string;
-}
+export interface RentalFilter {}
 
 export interface UsernameUserCredential {
     type: 'header';

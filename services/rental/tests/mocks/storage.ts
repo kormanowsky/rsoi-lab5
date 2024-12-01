@@ -16,7 +16,7 @@ export class MockRentalsStorage implements EntityStorage<Rental, RentalFilter, R
         return this.storage[id] ?? null;
     }
 
-    async getMany(_: Omit<RentalFilter, 'username'>): Promise<Array<Required<Rental>>> {
+    async getMany(_: RentalFilter): Promise<Array<Required<Rental>>> {
         return Object.values(this.storage);
     }
 

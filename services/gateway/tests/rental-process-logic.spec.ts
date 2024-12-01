@@ -18,7 +18,6 @@ describe('RentalProcessLogic', () => {
             });
 
             const response = await logic.startRental({
-                username: 'testuser', 
                 carUid: newCar.carUid, 
                 dateFrom: new Date(2024, 1, 1), 
                 dateTo: new Date(2024, 1, 2)
@@ -36,7 +35,6 @@ describe('RentalProcessLogic', () => {
             });
 
             const response = await logic.startRental({
-                username: 'testuser', 
                 carUid: notAvailableCar.carUid, 
                 dateFrom: new Date(2024, 1, 1), 
                 dateTo: new Date(2024, 1, 2)
@@ -57,7 +55,6 @@ describe('RentalProcessLogic', () => {
                 });
 
                 const response = await logic.startRental({
-                    username: 'testuser', 
                     carUid: newCar.carUid, 
                     dateFrom: new Date(2024, 1, 1), 
                     dateTo: new Date(2024, 1, 2)
@@ -69,27 +66,15 @@ describe('RentalProcessLogic', () => {
             });
 
             test('отменяет аренду', async () => {
-                const response = await logic.cancelRental({rentalUid: rental.rentalUid, username: rental.username});
+                const response = await logic.cancelRental({rentalUid: rental.rentalUid});
                 
                 expect(response.error).toBeFalsy();
             });
 
             test('завершает аренду', async () => {
-                const response = await logic.finishRental({rentalUid: rental.rentalUid, username: rental.username});
+                const response = await logic.finishRental({rentalUid: rental.rentalUid});
                 
                 expect(response.error).toBeFalsy();
-            });
-
-            test('не отменяет чужую аренду', async () => {
-                const response = await logic.cancelRental({rentalUid: rental.rentalUid, username: 'not-a-' + rental.username});
-                
-                expect(response.error).toBeTruthy();
-            });
-
-            test('не завершает чужую аренду', async () => {
-                const response = await logic.finishRental({rentalUid: rental.rentalUid, username: 'not-a-' + rental.username});
-                
-                expect(response.error).toBeTruthy();
             });
         });
     });

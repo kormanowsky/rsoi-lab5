@@ -7,7 +7,7 @@ import { ConfigurableLogic, LogicOptions } from './interface';
 import { getClientOptsFromLogicOptions } from './helpers';
 
 export class RentalsLogic implements 
-    EntityLogic<Omit<Required<Rental>, 'username'>, Omit<RentalFilter, 'username'>, RentalId>,
+    EntityLogic<Required<Rental>, RentalFilter, RentalId>,
     ConfigurableLogic<RentalsLogic>
 {
     constructor(client: EntityClient<Rental, RentalFilter, RentalId>) {
@@ -74,10 +74,8 @@ export class RentalsLogic implements
         this.validatePartialEntity(value);
     }
 
-    validateFilter(value: RentalFilter): void {
-        if(value.username.length === 0) {
-            throw new Error('Invalid rental filter: has empty username');
-        }
+    validateFilter(_: RentalFilter): void {
+
     }
 
     validatePartialEntity(value: Partial<Rental>): void {
